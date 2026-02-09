@@ -27,7 +27,7 @@ iteration = 0
 while True:
     try:
         # Odczyt joysticków i potencjometrów
-        lx, ly, rx, ry = joystick.get_data()
+        lx, ly, rx, ry = joystick.get_axes()
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
         

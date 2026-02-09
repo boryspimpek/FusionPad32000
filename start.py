@@ -8,7 +8,7 @@ import menu
 import ST7735 # type: ignore
 
 # --- I2C ---
-i2c = machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=100000)
+i2c = machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=400000)
 ads1 = ADS1115(i2c, address=0x48, gain=1)
 ads2 = ADS1115(i2c, address=0x49, gain=1)
 joystick.init(ads1, ads2)
