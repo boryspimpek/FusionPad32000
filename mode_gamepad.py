@@ -1,8 +1,8 @@
 # mode_gamepad.py
 import time
 import struct
-import bluetooth
-from micropython import const
+import bluetooth # type: ignore
+from micropython import const # type: ignore
 import joystick
 import buttons
 import ST7735  # type: ignore
@@ -28,16 +28,33 @@ HID_REPORT_DESCRIPTOR = bytes([
     0x95, 0x10,        # Report Count (16)
     0x81, 0x02,        # Input (Data,Var,Abs)
 
-    # --- Analog Sticks ---
+    # --- HAT SWITCH (D-Pad) ---
     0x05, 0x01,        # Usage Page (Generic Desktop)
-    0x09, 0x30,  # X  (Left stick X)
-    0x09, 0x31,  # Y  (Left stick Y)
-    0x09, 0x32,  # Z  (Right stick X)
-    0x09, 0x35,  # Rz (Right stick Y)    0x15, 0x00,        # Logical Minimum (0)
-    0x26, 0xFF, 0x00,  # Logical Maximum (255)
-    0x75, 0x08,        # Report Size (8)
-    0x95, 0x04,        # Report Count (4)
+    0x09, 0x39,        # Usage (Hat switch)
+    0x15, 0x00,        # Logical Min (0)
+    0x25, 0x07,        # Logical Max (7)
+    0x35, 0x00,        # Physical Min (0)
+    0x46, 0x3B, 0x01,  # Physical Max (315)
+    0x65, 0x14,        # Unit (Eng Rot: degrees)
+    0x75, 0x04,        # Report Size (4)
+    0x95, 0x01,        # Report Count (1)
     0x81, 0x02,        # Input (Data,Var,Abs)
+
+    # Padding do pełnego bajtu
+    0x75, 0x04,
+    0x95, 0x01,
+    0x81, 0x03,         # Input (Const,Var,Abs)
+
+    # --- Analog Sticks ---
+    0x05, 0x01,         # Usage Page (Generic Desktop)
+    0x09, 0x30,         # X  (Left stick X)
+    0x09, 0x31,         # Y  (Left stick Y)
+    0x09, 0x32,         # Z  (Right stick X)
+    0x09, 0x35,         # Rz (Right stick Y)    0x15, 0x00,        # Logical Minimum (0)
+    0x26, 0xFF, 0x00,   # Logical Maximum (255)
+    0x75, 0x08,         # Report Size (8)
+    0x95, 0x04,         # Report Count (4)
+    0x81, 0x02,         # Input (Data,Var,Abs)
 
     # --- Triggers (L2 / R2) ---
     0x05, 0x02,        # Usage Page (Simulation Controls)
@@ -118,14 +135,14 @@ class BLE_HID:
                 self.on_state_change(False)
             self._advertise()
 
-    def send_report(self, buttons_state, axes):
+    def send_report(self, buttons_state, hat, axes):
         if not self.connected:
             return
         try:
             self.ble.gatts_notify(
                 self.conn_handle,
                 self.h_rep,
-                struct.pack('<H6B', buttons_state, *axes)
+                struct.pack('<HB6B', buttons_state, hat, *axes)
             )
         except:
             pass
@@ -137,6 +154,24 @@ def map_axis(val):
     """Mapowanie z [-100, 100] na [0, 255]"""
     return max(0, min(255, int((val + 100) * 1.275)))
 
+def hat_from_buttons(up, down, left, right):
+    if up and right:
+        return 1
+    if right and down:
+        return 3
+    if down and left:
+        return 5
+    if left and up:
+        return 7
+    if up:
+        return 0
+    if right:
+        return 2
+    if down:
+        return 4
+    if left:
+        return 6
+    return 15  
 
 # --- MAIN ----------------------------------------------------------
 
@@ -157,7 +192,8 @@ def run(tft):
 
     BUTTON_MAP = {
         'bt1': 1, 'bt2': 0, 'bt3': 3, 'bt4': 2,
-        'sw1': 8, 'sw2': 9, 'sw3': 6, 'sw4': 7
+        'bt5': 4, 'bt6': 5, 'bt7': 6, 'bt8': 7,
+        'sw1': 8, 'sw2': 9, 'sw3': 11, 'sw4': 10
     }
 
     print("Gamepad mode active")
@@ -191,6 +227,13 @@ def run(tft):
                 int(pots['pot2'] * 2.55),    # R2 -> Brake
             ]
 
-            hid.send_report(b_state, axes)
+            hat = hat_from_buttons(
+                btn_data.get('bt8', False),
+                btn_data.get('bt7', False),
+                btn_data.get('bt5', False),
+                btn_data.get('bt6', False),
+            )
+
+            hid.send_report(b_state, hat, axes)
 
         time.sleep_ms(10)
