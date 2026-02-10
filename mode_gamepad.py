@@ -156,9 +156,8 @@ def run(tft):
     hid = BLE_HID("ESP32 Gamepad", on_state_change=update_screen)
 
     BUTTON_MAP = {
-        'bt1': 0, 'bt2': 1, 'bt3': 2, 'bt4': 3,
-        'bt5': 4, 'bt6': 5, 'bt7': 6, 'bt8': 7,
-        'sw1': 8, 'sw2': 9, 'sw3': 10
+        'bt1': 1, 'bt2': 0, 'bt3': 3, 'bt4': 2,
+        'sw1': 8, 'sw2': 9, 'sw3': 6, 'sw4': 7
     }
 
     print("Gamepad mode active")
