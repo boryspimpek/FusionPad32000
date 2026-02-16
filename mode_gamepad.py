@@ -198,14 +198,28 @@ def run(tft):
 
     print("Gamepad mode active")
 
+    exit_timer = 0
+
     while True:
         btn_data = buttons.get_data()
 
-        # Exit
-        if btn_data.get('sw4', False):
-            hid.ble.active(False)
-            tft.fill(ST7735.TFT.BLACK)
-            return
+        # --- NOWA LOGIKA WYJŚCIA (SW1 + SW2 przez 2 sekundy) ---
+        if btn_data.get('sw1', False) and btn_data.get('sw2', False):
+            if exit_timer == 0:
+                exit_timer = time.ticks_ms()
+            elif time.ticks_diff(time.ticks_ms(), exit_timer) > 2000:
+                # Procedura wyjścia
+                hid.ble.active(False)
+                tft.fill(ST7735.TFT.BLACK)
+                
+                # Czekaj na puszczenie przycisków, aby menu nie wystartowało od razu
+                tft.text((20, 60), "RELEASE BUTTONS...", 0xFFFF, FONT, 1) # Użyj swojej zmiennej WHITE/FONT
+                while buttons.get_data()['sw1'] or buttons.get_data()['sw2']:
+                    time.sleep(0.05)
+                return
+        else:
+            exit_timer = 0
+        # -------------------------------------------------------
 
         if hid.connected:
             joy = joystick.get_data()  # [-100..100]
@@ -217,14 +231,14 @@ def run(tft):
                 if btn_data.get(name, False):
                     b_state |= (1 << bit)
 
-            # Axes order MUST match descriptor
+            # Axes order
             axes = [
                 map_axis(joy[0]),            # X
                 map_axis(-joy[1]),           # Y
                 map_axis(joy[2]),            # Rx
                 map_axis(-joy[3]),           # Ry
-                int(pots['pot1'] * 2.55),    # L2 -> Accelerator
-                int(pots['pot2'] * 2.55),    # R2 -> Brake
+                int(pots['pot1'] * 2.55),    # L2
+                int(pots['pot2'] * 2.55),    # R2
             ]
 
             hat = hat_from_buttons(
