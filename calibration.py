@@ -1,64 +1,72 @@
-# calibration.py
-import machine, time
-from ads1x15 import ADS1115 # type: ignore
+import machine
+import time
+from ads1x15 import ADS1115
 
-i2c = machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21))
-ads1 = ADS1115(i2c, address=0x48, gain=1)  # Fizycznie PRAWY joystick
-ads2 = ADS1115(i2c, address=0x49, gain=1)  # Fizycznie LEWY joystick
+# --- Konfiguracja I2C ---
+i2c = machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=400000)
 
-def read_raw(ads, ch):
-    return ads.read(rate=4, channel1=ch)
+# --- ADS1115 ---
+ads1 = ADS1115(i2c, address=0x48, gain=1)
+ads2 = ADS1115(i2c, address=0x49, gain=1)
 
-def calibrate():
-    print("\n=== START KALIBRACJI ===")
-    print("ads1 (0x48) = PRAWY joystick")
-    print("ads2 (0x49) = LEWY joystick")
-    print("\nKROK 1: Puść drążki (pozycja NEUTRALNA).")
-    print("Czekam 3 sekundy...")
-    time.sleep(3)
-    
-    # Pobranie wartości środkowych (średnia z 5 pomiarów dla stabilności)
-    mids = [0] * 4
-    for _ in range(5):
-        mids[0] += read_raw(ads1, 1)  # Prawy X (fizycznie)
-        mids[1] += read_raw(ads1, 2)  # Prawy Y (fizycznie)
-        mids[2] += read_raw(ads2, 1)  # Lewy X (fizycznie Y)
-        mids[3] += read_raw(ads2, 2)  # Lewy Y (fizycznie X)
-        time.sleep(0.05)
-    mids = [int(x/5) for x in mids]
+channels = ["LX", "LY", "RX", "RY", "POT1", "POT2"]
 
-    print(f"Zapisano środki: {mids}")
-    print("\nKROK 2: Masz 10 sekund na kręcenie drążkami!")
-    print("Rób pełne kółka, dociskając do krawędzi.")
-    
-    mins = list(mids)
-    maxs = list(mids)
-    
-    start = time.time()
-    while time.time() - start < 10:
-        cur = [read_raw(ads1, 1), read_raw(ads1, 2), read_raw(ads2, 1), read_raw(ads2, 2)]
-        for i in range(4):
-            if cur[i] < mins[i]: mins[i] = cur[i]
-            if cur[i] > maxs[i]: maxs[i] = cur[i]
-        print(".", end="")
-        time.sleep(0.05)
+def get_raw_values():
+    """Odczytuje wszystkie kanały naraz"""
+    return [
+        ads2.read(rate=4, channel1=2), # LX
+        ads2.read(rate=4, channel1=1), # LY
+        ads1.read(rate=4, channel1=1), # RX
+        ads1.read(rate=4, channel1=2), # RY
+        ads2.read(rate=4, channel1=0), # POT1
+        ads1.read(rate=4, channel1=0)  # POT2
+    ]
 
-    print("\n\n=== WYNIKI KALIBRACJI ===")
-    print("Skopiuj te wartości do joystick.py:\n")
-    
-    # Nazwy zgodne z joystick.py
-    names = ["RIGHT_X", "RIGHT_Y", "LEFT_X", "LEFT_Y"]
-    
-    print("CAL = {")
-    print(f'    "LEFT_X": {{"min": {mins[2]}, "mid": {mids[2]}, "max": {maxs[2]}}},')
-    print(f'    "LEFT_Y": {{"min": {mins[3]}, "mid": {mids[3]}, "max": {maxs[3]}}},')
-    print(f'    "RIGHT_X": {{"min": {mins[0]}, "mid": {mids[0]}, "max": {maxs[0]}}},')
-    print(f'    "RIGHT_Y": {{"min": {mins[1]}, "mid": {mids[1]}, "max": {maxs[1]}}},')
-    print("}")
-    
-    print("\n=== SZCZEGÓŁY ===")
-    for i, name in enumerate(names):
-        print(f"{name:8}: Min={mins[i]:5}, Mid={mids[i]:5}, Max={maxs[i]:5}")
+# Inicjalizacja słowników dla wyników
+mins = [32767] * 6
+maxs = [0] * 6
+centers = [0] * 6
 
-# Uruchomienie
-calibrate()
+print("=== START KALIBRACJI ===")
+
+# --- ETAP 1: ŚRODEK (5 sekund) ---
+print("\n[1/2] KALIBRACJA ŚRODKA (5 sek) - NIE DOTYKAJ JOYSTICKÓW!")
+start_time = time.time()
+samples = 0
+sums = [0] * 6
+
+while time.time() - start_time < 5:
+    current = get_raw_values()
+    for i in range(6):
+        sums[i] += current[i]
+    samples += 1
+    time.sleep(0.05)
+
+for i in range(6):
+    centers[i] = sums[i] // samples
+
+# --- ETAP 2: MIN/MAX (10 sekund) ---
+print("\n[2/2] KALIBRACJA ZAKRESU (10 sek) - PORUSZAJ JOYSTICKAMI WE WSZYSTKIE STRONY!")
+start_time = time.time()
+
+while time.time() - start_time < 10:
+    current = get_raw_values()
+    for i in range(6):
+        if current[i] < mins[i]: mins[i] = current[i]
+        if current[i] > maxs[i]: maxs[i] = current[i]
+    
+    # Podgląd na żywo w terminalu
+    print("Mins: {}  Maxs: {}".format(mins, maxs), end='\r')
+    time.sleep(0.02)
+
+# --- WYNIKI ---
+print("\n\n=== WYNIKI KALIBRACJI ===")
+print("{:<6} | {:>7} | {:>7} | {:>7}".format("OŚ", "MIN", "CENTER", "MAX"))
+print("-" * 35)
+
+for i in range(6):
+    print("{:<6} | {:>7} | {:>7} | {:>7}".format(
+        channels[i], mins[i], centers[i], maxs[i]
+    ))
+
+print("\nSkopiuj te wartości do swojego głównego kodu.")

@@ -2,10 +2,10 @@
 
 # Kalibracja według FIZYCZNEJ POZYCJI
 CAL = {
-    "LEFT_X": {"min": 97,  "mid": 13000, "max": 26270},
-    "LEFT_Y": {"min": 102, "mid": 12734, "max": 26272},
-    "RIGHT_X": {"min": 101, "mid": 12729, "max": 26267},
-    "RIGHT_Y": {"min": 101, "mid": 12994, "max": 26267},
+    "LEFT_X": {"min": 3472,  "mid": 16447, "max": 30074},
+    "LEFT_Y": {"min": 3330, "mid": 16860, "max": 29993},
+    "RIGHT_X": {"min": 104, "mid": 13339, "max": 27596},
+    "RIGHT_Y": {"min": 104, "mid": 13591, "max": 27599},
 }
 
 # Kalibracja potencjometrów (0-100%)
@@ -25,16 +25,24 @@ def init(ads1_instance, ads2_instance):
     ads2 = ads2_instance
     print("✓ Moduł joystick zainicjalizowany")
 
+
 def _map_axis(val, config, invert=False):
-    deadzone = 1000
-    if abs(val - config["mid"]) < deadzone:
+    raw_deadzone = 300
+    out_deadzone = 3  # <-- TO JEST KLUCZ
+
+    if abs(val - config["mid"]) < raw_deadzone:
         return 0
-    
+
     if val < config["mid"]:
-        result = int(((val - config["min"]) / (config["mid"] - config["min"]) * 100) - 100)
+        result = ((val - config["min"]) / (config["mid"] - config["min"]) * 100) - 100
     else:
-        result = int(((val - config["mid"]) / (config["max"] - config["mid"]) * 100))
-    
+        result = ((val - config["mid"]) / (config["max"] - config["mid"]) * 100)
+
+    result = int(result)
+
+    if abs(result) <= out_deadzone:
+        result = 0
+
     return -result if invert else result
 
 def _map_pot(val, config, invert=False):

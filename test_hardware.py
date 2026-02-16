@@ -1,4 +1,3 @@
-# main.py
 import machine
 import time
 from ads1x15 import ADS1115
@@ -27,7 +26,7 @@ iteration = 0
 while True:
     try:
         # Odczyt joysticków i potencjometrów
-        lx, ly, rx, ry = joystick.get_axes()
+        lx, ly, rx, ry = joystick.get_data()
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
         

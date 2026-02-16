@@ -52,4 +52,3 @@ while True:
     elif wybor == "Calibration": # <--- NOWA OPCJA
         import mode_calibration
         mode_calibration.run(tft, ads1, ads2)
-
