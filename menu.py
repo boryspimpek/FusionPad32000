@@ -13,8 +13,10 @@ FONT = {
     "Data": glcdfont.font
 }
 
+def center_x(text, screen_w=160, char_w=6):
+    return (screen_w - len(text) * char_w) // 2
+
 def show(tft):
-    # Dodano opcję "Calibration"
     opcje = ["PC Gamepad", "RC Transmitter", "Robot Controller", "Calibration"]
     ilosc = len(opcje)
     wybrany = -1
@@ -34,7 +36,7 @@ def show(tft):
     
     # Nagłówek w ramce
     tft.rect((5, 5), (150, 25), CYAN)
-    tft.text((35, 13), "CONTROL MODE", CYAN, FONT, 1)
+    tft.text((center_x("CONTROL MODE"), 13), "CONTROL MODE", CYAN, FONT, 1)
     
     # Linia boczna (wydłużona do 80, aby objąć 4 opcje)
     tft.vline((18, START_Y - 5), 80, GREY)

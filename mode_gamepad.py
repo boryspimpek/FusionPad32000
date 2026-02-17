@@ -173,6 +173,9 @@ def hat_from_buttons(up, down, left, right):
         return 6
     return 15  
 
+def center_x(text, screen_w=160, char_w=6):
+    return (screen_w - len(text) * char_w) // 2
+
 # --- MAIN ----------------------------------------------------------
 
 def run(tft):
@@ -180,7 +183,7 @@ def run(tft):
     def update_screen(is_connected):
         tft.fill(ST7735.TFT.BLACK)
         tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
-        tft.text((35, 13), "GAMEPAD MODE", ST7735.TFT.CYAN, FONT, 1)
+        tft.text((center_x("GAMEPAD MODE"), 13), "GAMEPAD MODE", ST7735.TFT.CYAN, FONT, 1)
 
         status_txt = "STATUS: CONNECTED" if is_connected else "STATUS: WAITING..."
         status_clr = ST7735.TFT.GREEN if is_connected else ST7735.TFT.YELLOW

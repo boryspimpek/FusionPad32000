@@ -20,6 +20,9 @@ def map_to_rc(val, is_pot=False):
         return 1000 + (val * 10)
     else:
         return 1500 + (val * 5)
+    
+def center_x(text, screen_w=160, char_w=6):
+    return (screen_w - len(text) * char_w) // 2
 
 def run(tft):
     # Inicjalizacja sieci
@@ -40,7 +43,8 @@ def run(tft):
 
     # Rysujemy ekran tylko RAZ na początku
     tft.fill(BLACK)
-    tft.text((38, 20), "RC TRANSMITTER", WHITE, FONT, 1)
+    tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
+    tft.text((center_x("RC TRANSMITTER"), 13), "RC TRANSMITTER", ST7735.TFT.CYAN, FONT, 1)
     tft.text((65, 60), "READY", GREEN, FONT, 1)
     tft.text((20, 115), "HOLD SW1+SW2 TO EXIT", RED, FONT, 1)
 
