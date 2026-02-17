@@ -1,7 +1,7 @@
 # mode_rc.py
-import network
-import espnow
-import machine
+import network # type: ignore
+import espnow # type: ignore
+import machine # type: ignore
 import struct
 import time
 import joystick
@@ -13,7 +13,7 @@ import glcdfont
 FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}
 
 # --- KONFIGURACJA ODBIORNIKA ---
-RECEIVER_MAC = b'\xff\xff\xff\xff\xff\xff' 
+RECEIVER_MAC = b'\x98\x88\xe0\xd1\x82<' 
 
 def map_to_rc(val, is_pot=False):
     if is_pot:
