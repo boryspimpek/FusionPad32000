@@ -58,13 +58,13 @@ def run(tft):
 
         # 2. Mapowanie
         current_data = [
-            map_to_rc(joy_data[1]),           # CH1: LY
-            map_to_rc(joy_data[0]),           # CH2: LX
-            map_to_rc(joy_data[3]),           # CH3: RY
-            map_to_rc(joy_data[2]),           # CH4: RX
-            2000 if btns['sw3'] else 1000,    # CH5: SW3
-            2000 if btns['sw4'] else 1000,    # CH6: SW4
-            map_to_rc(pots['pot1'], True)     # CH7: POT1
+            map_to_rc(joy_data[1]),           # LY
+            map_to_rc(joy_data[0]),           # LX
+            map_to_rc(joy_data[3]),           # RY
+            map_to_rc(joy_data[2]),           # RX
+            2000 if btns['sw3'] else 1000,    # SW3
+            2000 if btns['sw4'] else 1000,    # SW4
+            map_to_rc(pots['pot1'], True)     # POT1
         ]
 
         # 3. Wysyłka bez czekania na potwierdzenie (False = Turbo)
