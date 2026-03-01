@@ -11,7 +11,7 @@
 * **2x Rotary Potentiometers:** Smooth analog dials for fine adjustments.
 * **8x Tactile Switches:** Managed via the **PCF8574** I2C expander.
 * **2x Toggle Switches:** Physical heavy-duty switches for mode selection.
-* **2x Shoulder Bumpers:** Front-facing triggers (Hardware integration in progress).
+* **2x Shoulder Bumpers:** Front-facing triggers.
 
 ### Interface & Power:
 * **1.8" TFT Display (ST7735):** Real-time system monitoring.
