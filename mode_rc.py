@@ -82,7 +82,7 @@ def run(tft):
         changed_dr = False
         
         # Pary przycisków: (Plus, Minus) dla każdej z 4 osi
-        pairs = [('bt3', 'bt4'), ('bt1', 'bt2'), ('bt7', 'bt8'), ('bt5', 'bt6')]
+        pairs = [('bt8', 'bt7'), ('bt6', 'bt5'), ('bt3', 'bt4'), ('bt1', 'bt2')]
 
         for i, (p, m) in enumerate(pairs):
             # Logika dla strony TRIM (Strona 1)
