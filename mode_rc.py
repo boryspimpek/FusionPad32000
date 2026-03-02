@@ -15,81 +15,194 @@ FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}
 # --- KONFIGURACJA ODBIORNIKA ---
 RECEIVER_MAC = b'\x98\x88\xe0\xd1\x82<' 
 
-def map_to_rc(val, is_pot=False):
-    if is_pot:
-        return 1000 + (val * 10)
-    else:
-        return 1500 + (val * 5)
+BLACK = ST7735.TFT.BLACK
+WHITE = ST7735.TFT.WHITE
+GREEN = 0x07E0
+RED   = 0xF800
+CYAN   = 0x07FF
+GRAY   = 0x4208
+
+def clamp(v, min_v, max_v):
+    return max(min_v, min(max_v, v))
     
 def center_x(text, screen_w=160, char_w=6):
     return (screen_w - len(text) * char_w) // 2
 
 def run(tft):
-    # Inicjalizacja sieci
+    # 1. INICJALIZACJA ESP-NOW
     sta = network.WLAN(network.STA_IF)
     sta.active(True)
     e = espnow.ESPNow()
     e.active(True)
-    
-    try:
+    try: 
         e.add_peer(RECEIVER_MAC)
-    except OSError:
+    except: 
         pass
 
-    BLACK = ST7735.TFT.BLACK
-    WHITE = ST7735.TFT.WHITE
-    GREEN = 0x07E0
-    RED   = 0xF800
-
-    # Rysujemy ekran tylko RAZ na początku
-    tft.fill(BLACK)
-    tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
-    tft.text((center_x("RC TRANSMITTER"), 13), "RC TRANSMITTER", ST7735.TFT.CYAN, FONT, 1)
-    tft.text((65, 60), "READY", GREEN, FONT, 1)
-    tft.text((20, 115), "HOLD SW1+SW2 TO EXIT", RED, FONT, 1)
-
+    # USTAWIENIA POCZĄTKOWE
+    trims = [0, 0, 0, 0]        # LY, LX, RY, RX
+    d_rates = [1.0, 1.0, 1.0, 1.0] 
+    current_page = -1 
+    last_btns = {f'bt{i}': False for i in range(1, 9)}
     exit_timer = 0
     
-    while True:
-        # 1. Błyskawiczny odczyt danych
-        joy_data = joystick.get_data() 
+    # Timery UI
+    last_ui_update = time.ticks_ms()
+    ui_interval = 50 
+    
+    running = True
+    while running:
+        # --- 1. ODCZYT DANYCH (Szybki) ---
+        joy_raw = joystick.get_data() 
+        # Mapowanie osi: LY, LX, RY, RX
+        joy_ordered = [joy_raw[1], joy_raw[0], joy_raw[3], joy_raw[2]]
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
 
-        # 2. Mapowanie
-        current_data = [
-            map_to_rc(joy_data[1]),           # LY
-            map_to_rc(joy_data[0]),           # LX
-            map_to_rc(joy_data[3]),           # RY
-            map_to_rc(joy_data[2]),           # RX
-            2000 if btns['sw3'] else 1000,    # SW3
-            2000 if btns['sw4'] else 1000,    # SW4
-            map_to_rc(pots['pot1'], True)     # POT1
+        # --- 2. MIKSOWANIE I WYSYŁKA (Krytyczne dla serw) ---
+        # Aplikujemy Dual Rates i Trimy do osi głównych
+        final_channels = [
+            1500 + int((clamp((joy_ordered[i] * d_rates[i]) + trims[i], -140, 140)) * 5) 
+            for i in range(4)
         ]
+        # Kanały pomocnicze (Przełączniki i Potencjometr)
+        final_channels.extend([
+            2000 if btns['sw3'] else 1000, 
+            2000 if btns['sw4'] else 1000, 
+            1000 + int(pots['pot1'] * 10)
+        ])
 
-        # 3. Wysyłka bez czekania na potwierdzenie (False = Turbo)
         try:
-            e.send(RECEIVER_MAC, struct.pack('7h', *current_data), False)
-        except OSError:
+            e.send(RECEIVER_MAC, struct.pack('7h', *final_channels), False)
+        except: 
             pass
 
-        # 4. Obsługa wyjścia
+        # --- 3. LOGIKA PRZYCISKÓW (Detekcja kliknięcia - Edge Detection) ---
+        changed_trims = False
+        changed_dr = False
+        
+        # Pary przycisków: (Plus, Minus) dla każdej z 4 osi
+        pairs = [('bt3', 'bt4'), ('bt1', 'bt2'), ('bt7', 'bt8'), ('bt5', 'bt6')]
+
+        for i, (p, m) in enumerate(pairs):
+            # Logika dla strony TRIM (Strona 1)
+            if current_page == 1:
+                if btns[p] and not last_btns[p]: 
+                    trims[i] = clamp(trims[i] + 1, -20, 20)
+                    changed_trims = True
+                if btns[m] and not last_btns[m]: 
+                    trims[i] = clamp(trims[i] - 1, -20, 20)
+                    changed_trims = True
+            
+            # Logika dla strony DUAL RATES (Strona 2)
+            elif current_page == 2:
+                if btns[p] and not last_btns[p]: 
+                    d_rates[i] = clamp(d_rates[i] + 0.05, 0.4, 1.2) # Krok 5%
+                    changed_dr = True
+                if btns[m] and not last_btns[m]: 
+                    d_rates[i] = clamp(d_rates[i] - 0.05, 0.4, 1.2)
+                    changed_dr = True
+
+        # Renderowanie natychmiastowe przy zmianie wartości (płynność UI)
+        if changed_trims:
+            update_trim_values(tft, trims)
+        if changed_dr:
+            update_dr_values(tft, d_rates)
+
+        # Aktualizacja stanu przycisków dla następnej pętli
+        for k in last_btns:
+            last_btns[k] = btns[k]
+
+        # --- 4. PRZEŁĄCZANIE STRON I MONITORING (Co interwał UI) ---
+        now = time.ticks_ms()
+        if time.ticks_diff(now, last_ui_update) > ui_interval:
+            last_ui_update = now
+            
+            # Wybór strony potencjometrem pot2
+            p2 = pots['pot2']
+            new_page = 0 if p2 < 34 else (1 if p2 < 67 else 2)
+
+            if new_page != current_page:
+                current_page = new_page
+                tft.fill(BLACK)
+                draw_static_ui(tft, current_page)
+                
+                # Wymuszenie odświeżenia wartości przy wejściu na stronę
+                if current_page == 0:
+                    tft.text((center_x("READY"), 60), "READY", GREEN, FONT, 2)
+                elif current_page == 1:
+                    update_trim_values(tft, trims)
+                elif current_page == 2:
+                    update_dr_values(tft, d_rates)
+                
+        # --- 5. OBSŁUGA WYJŚCIA (SW1 + SW2 przez 2 sekundy) ---
         if btns['sw1'] and btns['sw2']:
             if exit_timer == 0:
                 exit_timer = time.ticks_ms()
             elif time.ticks_diff(time.ticks_ms(), exit_timer) > 2000:
-                break
+                running = False 
         else:
             exit_timer = 0
 
-        # Minimalna przerwa, aby nie zapchać bufora, ale utrzymać płynność
-        time.sleep_ms(10) # 100Hz - standard profesjonalnych aparatur RC
-
-    # Wyjście z trybu
+        time.sleep_ms(2) # Minimalny sleep dla stabilności procesora
+    
+    # SPRZĄTANIE PO WYJŚCIU
     tft.fill(BLACK)
-    tft.text((20, 60), "RELEASE BUTTONS...", WHITE, FONT, 1)
+    tft.text((center_x("RELEASE BUTTONS"), 60), "RELEASE BUTTONS...", WHITE, FONT, 1)
     while buttons.get_data()['sw1'] or buttons.get_data()['sw2']:
-        time.sleep(0.05)
+        time.sleep_ms(50)
     
     e.active(False)
     sta.active(False)
+
+# --- FUNKCJE RYSOWANIA GUI ---
+
+def update_trim_values(tft, trims, force=False):
+    for i, val in enumerate(trims):
+        y = 40 + (i * 22)
+        # Czyścimy tylko obszar tekstu i paska kursora
+        tft.fillrect((135, y), (25, 8), BLACK) 
+        tft.text((135, y), str(val), GREEN, FONT, 1)
+        
+        # UI paska
+        tft.fillrect((30, y-2), (100, 10), BLACK)
+        tft.hline((30, y + 3), 100, GRAY)
+        tft.vline((80, y), 7, WHITE) # Ponowne rysowanie środka
+        tft.vline((80 + (val * 2), y-2), 10, CYAN) # Kursor
+
+def draw_static_ui(tft, page):
+    tft.rect((0, 0), (160, 20), CYAN)
+    titles = ["MODE: MONITOR", "MODE: TRIMS", "MODE: DUAL RATES"]
+    tft.text((30, 7), titles[page], CYAN, FONT, 1)
+    
+    labels = ["LY", "LX", "RY", "RX"]
+    if page == 1: # Trims UI
+        for i, label in enumerate(labels):
+            y = 40 + (i * 22)
+            tft.text((5, y), label, WHITE, FONT, 1)
+            tft.hline((30, y + 3), 100, GRAY) 
+            tft.vline((80, y), 7, WHITE)
+            
+    elif page == 2: # Dual Rates UI
+        for i, label in enumerate(labels):
+            y = 40 + (i * 22)
+            tft.text((5, y), f"AXIS {label}:", WHITE, FONT, 1)
+            # Rysujemy tło paska (opcjonalnie dla bajeru)
+            tft.rect((70, y-2), (52, 10), GRAY)
+
+def update_dr_values(tft, d_rates):
+    for i, val in enumerate(d_rates):
+        y = 40 + (i * 22)
+        perc = int(val * 100)
+        color = GREEN if val <= 1.0 else RED
+        
+        # Czyścimy tylko obszar wartości i paska
+        tft.fillrect((71, y-1), (50, 8), BLACK) 
+        tft.fillrect((125, y), (35, 8), BLACK)
+        
+        # Rysujemy mały słupek postępu (wizualizacja DR)
+        bar_w = int((val - 0.5) * 60) # Skalowanie paska
+        tft.fillrect((71, y-1), (bar_w, 8), color)
+        
+        # Tekst procentowy
+        tft.text((125, y), f"{perc}%", color, FONT, 1)

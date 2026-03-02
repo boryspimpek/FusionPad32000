@@ -2,7 +2,7 @@
 #Translated by Guy Carver from the ST7735 sample code.
 #Modirfied for micropython-esp32 by boochow 
 
-import machine
+import machine # type: ignore
 import time
 from math import sqrt
 
