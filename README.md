@@ -9,8 +9,8 @@
 ### Control & Inputs:
 * **2x PS4 Joysticks (Hall Effect):** Magnetic sensors for zero-drift precision. Includes L3/R3 buttons.
 * **2x Rotary Potentiometers:** Smooth analog dials for fine adjustments.
-* **8x Tactile Switches:** Managed via the **PCF8574** I2C expander.
-* **2x Toggle Switches:** Physical heavy-duty switches for mode selection.
+* **8x Tactile Switches:**.
+* **2x Toggle Switches:** Physical heavy-duty switches.
 * **2x Shoulder Bumpers:** Front-facing triggers.
 
 ### Interface & Power:
