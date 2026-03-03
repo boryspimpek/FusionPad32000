@@ -22,6 +22,7 @@
 
 ## 💻 Data Acquisition (ADC) Mapping
 <img src="images/6.jpg" width="400"> <img src="images/7.jpg" width="400">
+
 The project uses two **ADS1115** (16-bit) converters to handle high-resolution analog data:
 
 ### ADS1 (Address: 0x48)
@@ -75,9 +76,5 @@ Below is the complete pin configuration as defined in the source code:
 
 ---
 > **Note:** The 8 tact switches are not connected directly to the ESP32 but are routed through the **PCF8574** expander at I2C address `0x20`.
-## 🚀 Quick Start
 
-1. **Libraries:** Install `Adafruit GFX`, `ST7735`, `ADS1X15`, and `PCF8574` via Arduino Library Manager.
-2. **SD Card:** Place `.bmp` assets in the root directory.
-3. **Wiring:** Ensure I2C pull-up resistors are installed for the ADS and PCF modules.
 
