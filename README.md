@@ -1,6 +1,6 @@
 # FusionPad-32 🎮
 
-**FusionPad-32** is an advanced, high-performance universal controller powered by the **ESP32**. It features a custom graphical interface, Hall Effect precision joysticks, and an expandable I/O system via I2C.
+**FusionPad-32** is an advanced, high-performance universal controller powered by the **ESP32**. It features a custom graphical interface, Hall Effect precision joysticks, buttons, switches and potentiometers.
 
 <img src="images/1.jpg" width="400">
 
