@@ -4,7 +4,49 @@
 
 <img src="images/1.jpg" width="400">
 
+---
+
+## 🖥️ System Interface & Navigation
+
+**FusionPad-32** runs on a modular MicroPython firmware. Upon boot, the device initializes the **ST7735 (Red Tab)** display in landscape mode and presents a selection menu. This allows the controller to be a multi-purpose tool, switching its logic without reflashing the firmware.
+
+### 🎮 Operating Modes
+
+The system is divided into specialized modules to handle different communication protocols:
+
+| Mode | Description |
+|:---|:---|
+| **🕹️ PC Gamepad** | Emulates a standard HID game controller. Optimized for low-latency gaming on PC via Bluetooth/USB. |
+| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW or custom RF protocols). |
+| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via UDP/TCP. |
+| **🎯 Calibration** | **Critical Tool:** A dedicated utility to map the Hall Effect sensor ranges (0-65535), set deadzones, and save offsets to the internal storage. |
+
+---
+
+## ⚙️ Software Architecture
+
+The project follows a modular "Plug-and-Play" script architecture to optimize RAM usage on the ESP32.
+
+### 📡 Communication & Bus Config
+* **I2C (400kHz):** High-speed bus for real-time data from dual **ADS1115** ADCs and the **PCF8574** IO expander.
+* **SPI (20MHz):** High-bandwidth link for the TFT display to ensure smooth UI animations and 60FPS refresh rates.
+
+### 📂 File Structure
+* `main.py`: System entry point, initializes hardware and handles mode selection.
+* `menu.py`: Graphical UI handler for the ST7735 display.
+* `joystick.py` / `buttons.py`: Hardware abstraction layers for input processing.
+* `mode_*.py`: Isolated logic for each specific use case.
+
+---
+
+## 🚀 Quick Start
+1. Power on the FusionPad-32.
+2. Use the navigation buttons to highlight a mode.
+3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
+4. Launch your desired mode and enjoy zero-drift precision!
 ## 🛠️ Hardware Specifications
+
+---
 
 ### Control & Inputs:
 * **2x PS4 Joysticks (Hall Effect):** Magnetic sensors for zero-drift precision. Includes L3/R3 buttons.
