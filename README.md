@@ -17,8 +17,8 @@ The system is divided into specialized modules:
 | Mode | Description |
 |:---|:---|
 | **🕹️ PC Gamepad** | Emulates a standard HID game controller. Optimized for low-latency gaming on PC via Bluetooth/USB. |
-| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW RF protocols). |
-| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via  ESP-NOW |
+| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW or RF protocols). |
+| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via  ESP-NOW. controll as many robots as You want, with adding reviver Mac adress|
 | **🎯 Calibration** | **Critical Tool:** A dedicated utility to map the Hall Effect sensor ranges (0-65535) and save to the internal storage. |
 
 ---
