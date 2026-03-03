@@ -45,8 +45,8 @@ The project follows a modular "Plug-and-Play" script architecture to optimize RA
 3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
 4. Launch your desired mode and enjoy zero-drift precision!
 
+---
 ## 🛠️ Hardware Specifications
-
 
 ### Control & Inputs:
 * **2x PS4 Joysticks (Hall Effect):** Magnetic sensors for zero-drift precision. Includes L3/R3 buttons.
