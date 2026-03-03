@@ -8,18 +8,18 @@
 
 ## 🖥️ System Interface & Navigation
 
-**FusionPad-32** runs on a modular MicroPython firmware. Upon boot, the device initializes the **ST7735 (Red Tab)** display in landscape mode and presents a selection menu. This allows the controller to be a multi-purpose tool, switching its logic without reflashing the firmware.
+**FusionPad-32** runs on a modular MicroPython firmware. Upon boot, the device initializes the display and presents a selection menu. This allows the controller to be a multi-purpose tool, switching its logic without reflashing the firmware.
 
 ### 🎮 Operating Modes
 
-The system is divided into specialized modules to handle different communication protocols:
+The system is divided into specialized modules:
 
 | Mode | Description |
 |:---|:---|
 | **🕹️ PC Gamepad** | Emulates a standard HID game controller. Optimized for low-latency gaming on PC via Bluetooth/USB. |
-| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW or custom RF protocols). |
-| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via UDP/TCP. |
-| **🎯 Calibration** | **Critical Tool:** A dedicated utility to map the Hall Effect sensor ranges (0-65535), set deadzones, and save offsets to the internal storage. |
+| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW RF protocols). |
+| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via  ESP-NOW |
+| **🎯 Calibration** | **Critical Tool:** A dedicated utility to map the Hall Effect sensor ranges (0-65535) and save to the internal storage. |
 
 ---
 
@@ -33,15 +33,15 @@ The project follows a modular "Plug-and-Play" script architecture to optimize RA
 
 ### 📂 File Structure
 * `main.py`: System entry point, initializes hardware and handles mode selection.
-* `menu.py`: Graphical UI handler for the ST7735 display.
-* `joystick.py` / `buttons.py`: Hardware abstraction layers for input processing.
+* `menu.py`: Graphical UI handler for the display.
+* `joystick.py` / `buttons.py`: Hardware abstraction lavers for input processing.
 * `mode_*.py`: Isolated logic for each specific use case.
 
 ---
 
 ## 🚀 Quick Start
 1. Power on the FusionPad-32.
-2. Use the navigation buttons to highlight a mode.
+2. Use potentiometr to highlight a mode.
 3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
 4. Launch your desired mode and enjoy zero-drift precision!
 
