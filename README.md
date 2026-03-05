@@ -1,16 +1,58 @@
 # FusionPad-32 🎮
 
-**FusionPad-32** is an advanced, high-performance universal controller powered by the **ESP32**. It features a custom graphical interface, Hall Effect precision joysticks, and an expandable I/O system via I2C.
+**FusionPad-32** is an advanced, high-performance universal controller powered by the **ESP32**. It features a custom graphical interface, Hall Effect precision joysticks, buttons, switches and potentiometers.
 
 <img src="images/1.jpg" width="400">
 
+---
+
+## 🖥️ System Interface & Navigation
+
+**FusionPad-32** runs on a modular MicroPython firmware. Upon boot, the device initializes the display and presents a selection menu. This allows the controller to be a multi-purpose tool, switching its logic without reflashing the firmware.
+
+### 🎮 Operating Modes
+
+The system is divided into specialized modules:
+
+| Mode | Description |
+|:---|:---|
+| **🕹️ PC Gamepad** | Emulates a standard HID game controller. Optimized for low-latency gaming on PC via Bluetooth/USB. |
+| **📡 RC Transmitter** | Transforms the device into a professional radio transmitter for drones or planes (supporting ESP-NOW or RF protocols). |
+| **🤖 Robot Controller** | Wireless control mode designed for robotics, sending telemetry and movement commands via  ESP-NOW. Controll as many robots as You want, adding reciever Mac adress|
+| **🎯 Calibration** | **Critical Tool:** A dedicated utility to map the Hall Effect sensor ranges (0-65535) and save to the internal storage. |
+
+---
+
+## ⚙️ Software Architecture
+
+The project follows a modular "Plug-and-Play" script architecture to optimize RAM usage on the ESP32.
+
+### 📡 Communication & Bus Config
+* **I2C (400kHz):** High-speed bus for real-time data from dual **ADS1115** ADCs and the **PCF8574** IO expander.
+* **SPI (20MHz):** High-bandwidth link for the TFT display to ensure smooth UI animations and 60FPS refresh rates.
+
+### 📂 File Structure
+* `main.py`: System entry point, initializes hardware and handles mode selection.
+* `menu.py`: Graphical UI handler for the display.
+* `joystick.py` / `buttons.py`: Hardware abstraction lavers for input processing.
+* `mode_*.py`: Isolated logic for each specific use case.
+
+---
+
+## 🚀 Quick Start
+1. Power on the FusionPad-32.
+2. Use potentiometr to highlight a mode.
+3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
+4. Launch your desired mode and enjoy zero-drift precision!
+
+---
 ## 🛠️ Hardware Specifications
 
 ### Control & Inputs:
 * **2x PS4 Joysticks (Hall Effect):** Magnetic sensors for zero-drift precision. Includes L3/R3 buttons.
 * **2x Rotary Potentiometers:** Smooth analog dials for fine adjustments.
-* **8x Tactile Switches:** Managed via the **PCF8574** I2C expander.
-* **2x Toggle Switches:** Physical heavy-duty switches for mode selection.
+* **8x Tactile Switches**.
+* **2x Toggle Switches:** Physical heavy-duty switches.
 * **2x Shoulder Bumpers:** Front-facing triggers.
 
 ### Interface & Power:
@@ -22,6 +64,7 @@
 
 ## 💻 Data Acquisition (ADC) Mapping
 <img src="images/6.jpg" width="400"> <img src="images/7.jpg" width="400">
+
 The project uses two **ADS1115** (16-bit) converters to handle high-resolution analog data:
 
 ### ADS1 (Address: 0x48)
@@ -75,9 +118,5 @@ Below is the complete pin configuration as defined in the source code:
 
 ---
 > **Note:** The 8 tact switches are not connected directly to the ESP32 but are routed through the **PCF8574** expander at I2C address `0x20`.
-## 🚀 Quick Start
 
-1. **Libraries:** Install `Adafruit GFX`, `ST7735`, `ADS1X15`, and `PCF8574` via Arduino Library Manager.
-2. **SD Card:** Place `.bmp` assets in the root directory.
-3. **Wiring:** Ensure I2C pull-up resistors are installed for the ADS and PCF modules.
 
