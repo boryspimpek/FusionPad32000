@@ -97,10 +97,10 @@ def run(tft):
             # Logika dla strony DUAL RATES (Strona 2)
             elif current_page == 2:
                 if btns[p] and not last_btns[p]: 
-                    d_rates[i] = clamp(d_rates[i] + 0.05, 0.4, 1.2) # Krok 5%
+                    d_rates[i] = clamp(d_rates[i] + 0.05, 0.4, 1.4) # Krok 5%
                     changed_dr = True
                 if btns[m] and not last_btns[m]: 
-                    d_rates[i] = clamp(d_rates[i] - 0.05, 0.4, 1.2)
+                    d_rates[i] = clamp(d_rates[i] - 0.05, 0.4, 1.4)
                     changed_dr = True
 
         # Renderowanie natychmiastowe przy zmianie wartości (płynność UI)
