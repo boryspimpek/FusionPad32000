@@ -10,6 +10,8 @@
 
 **FusionPad-32** runs on a modular MicroPython firmware. Upon boot, the device initializes the display and presents a selection menu. This allows the controller to be a multi-purpose tool, switching its logic without reflashing the firmware.
 
+<img src="images/8.jpg" width="400">
+
 ### 🎮 Operating Modes
 
 The system is divided into specialized modules:
