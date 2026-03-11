@@ -19,6 +19,11 @@ GREEN  = 0x07E0
 RED    = 0xF800
 GRAY   = 0x4208
 
+# Tryby/ekrany (wysyłane też w ramce ESP-NOW)
+MODE_MAIN    = 0  # ekran z joystickami
+MODE_SCREEN2 = 1  # pierwszy ekran akcji
+MODE_SCREEN3 = 2  # drugi ekran akcji
+
 def pad(val, width=4):
     s = str(val)
     return ' ' * (width - len(s)) + s
@@ -41,17 +46,7 @@ def run(tft):
     except OSError:
         pass
 
-    tft.fill(BLACK)
-
     # --- Układ 160x128, czcionka 5x7 → znak 6x8px ---
-    #
-    # y=  0  "J1X:" [val]   |  "J2X:" [val]   (dwie kolumny)
-    # y= 12  "J1Y:" [val]   |  "J2Y:" [val]
-    # y= 24  "POT:" [val]
-    # y= 36  "BT:" 1 2 3 4 5 6 7 8
-    # y= 52  "SW:" SW1 SW2 SW3 SW4
-    # y= 68  "TX:" [count]
-    # y= 82  "HOLD SW1+SW2=EXIT"          (90px łącznie → mieści się)
 
     OX    = 10          # margines lewy (~2 znaki)
     OY    = 40          # margines górny
@@ -60,73 +55,126 @@ def run(tft):
     VAL_L = COL_L + 26  # miejsce na wartość (za 4-znakowym nagłówkiem)
     VAL_R = COL_R + 26
 
-    # Nagłówki — rysujemy raz
-    tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
-    tft.text((center_x("ROBOT CONTROLLER"), 13), "ROBOT CONTROLLER", ST7735.TFT.CYAN, FONT, 1)
-    tft.text((COL_L, OY +  0), "J1X:", CYAN,   FONT, 1)
-    tft.text((COL_R, OY +  0), "J2X:", CYAN,   FONT, 1)
-    tft.text((COL_L, OY + 12), "J1Y:", CYAN,   FONT, 1)
-    tft.text((COL_R, OY + 12), "J2Y:", CYAN,   FONT, 1)
-    tft.text((COL_L, OY + 24), "POT:", YELLOW, FONT, 1)
-    tft.text((COL_L, OY + 36), "BT:",  WHITE,  FONT, 1)
-    tft.text((COL_L, OY + 52), "SW:",  WHITE,  FONT, 1)
-    tft.text((COL_L, OY + 68), "TX:",  GRAY,   FONT, 1)
-    tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
+    def draw_header():
+        tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
+        tft.text((center_x("ROBOT CONTROLLER"), 13), "ROBOT CONTROLLER", ST7735.TFT.CYAN, FONT, 1)
+
+    def draw_main_screen():
+        tft.fill(BLACK)
+        draw_header()
+        tft.text((COL_L, OY +  0), "J1X:", CYAN,   FONT, 1)
+        tft.text((COL_R, OY +  0), "J2X:", CYAN,   FONT, 1)
+        tft.text((COL_L, OY + 12), "J1Y:", CYAN,   FONT, 1)
+        tft.text((COL_R, OY + 12), "J2Y:", CYAN,   FONT, 1)
+        tft.text((COL_L, OY + 24), "POT:", YELLOW, FONT, 1)
+        tft.text((COL_L, OY + 36), "BT:",  WHITE,  FONT, 1)
+        tft.text((COL_L, OY + 52), "SW:",  WHITE,  FONT, 1)
+        tft.text((COL_L, OY + 68), "TX:",  GRAY,   FONT, 1)
+        tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
+
+    def draw_simple_screen(label):
+        """
+        Dwie listy obok siebie:
+
+        action A = L1   R1 = action E
+        action B = L2   R2 = action F
+        action C = L3   R3 = action G
+        action D = L4   R4 = action H
+        """
+        tft.fill(BLACK)
+        draw_header()
+
+        # Layout (pod nagłówkiem, nad czerwonym napisem)
+        LIST_Y = 45
+        ROW_H = 16
+        X_L = 10
+        X_R = 89
+
+        if label == "screen2":
+            left = ["actionA L1", "actionB L2", "actionC L3", "actionD L4"]
+            right = ["R1 actionE", "R2 actionF", "R3 actionG", "R4 actionH"]
+        else:  # "screen3"
+            left = ["actionA L1", "actionB L2", "actionC L3", "actionD L4"]
+            right = ["R1 actionE", "R2 actionF", "R3 actionG", "R4 actionH"]
+
+        for i in range(4):
+            y = LIST_Y + i * ROW_H
+            tft.text((X_L, y), left[i], WHITE, FONT, 1)
+            tft.text((X_R, y), right[i], WHITE, FONT, 1)
+
+        tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
 
     tx_count   = 0
     exit_timer = 0
     prev = {}
+    current_screen = -1
 
     while True:
         joy  = joystick.get_data()
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
 
-        # Joysticki + potencjometr
-        vals = {
-            'j1x': (joy[0],              VAL_L, OY +  0),
-            'j1y': (joy[1],              VAL_L, OY + 12),
-            'j2x': (joy[2],              VAL_R, OY +  0),
-            'j2y': (joy[3],              VAL_R, OY + 12),
-            'pot': (pots.get('pot1', 0), VAL_L, OY + 24),
-        }
-        for key, (v, x, y) in vals.items():
-            if prev.get(key) != v:
-                tft.fillrect((x, y), (30, 8), BLACK)
-                tft.text((x, y), pad(v), WHITE, FONT, 1)
-                prev[key] = v
+        # Wybór ekranu potencjometrem (POT2), analogicznie jak w głównym menu
+        pot2_val = pots.get('pot2', 0)
+        # mapujemy 0–100 → 0,1,2 (MODE_MAIN / MODE_SCREEN2 / MODE_SCREEN3)
+        new_screen = min(int((pot2_val * 3) / 101), MODE_SCREEN3)
 
-        # Przyciski bt1–bt8
-        bt_changed = any(
-            prev.get(f'bt{i+1}') != bool(btns.get(f'bt{i+1}'))
-            for i in range(8)
-        )
-        if bt_changed:
-            x_bt = COL_L + 20
-            tft.fillrect((x_bt, OY + 36), (160 - x_bt, 8), BLACK)
-            x = x_bt
-            for i in range(8):
-                pressed = bool(btns.get(f'bt{i+1}'))
-                color = GREEN if pressed else GRAY
-                tft.text((x, OY + 36), str(i + 1), color, FONT, 1)
-                prev[f'bt{i+1}'] = pressed
-                x += 16
+        if new_screen != current_screen:
+            current_screen = new_screen
+            prev.clear()
+            if current_screen == MODE_MAIN:
+                draw_main_screen()
+            elif current_screen == MODE_SCREEN2:
+                draw_simple_screen("screen2")
+            else:  # MODE_SCREEN3
+                draw_simple_screen("screen3")
 
-        # Switche sw1–sw4
-        sw_changed = any(
-            prev.get(sw) != bool(btns.get(sw))
-            for sw in ['sw1', 'sw2', 'sw3', 'sw4']
-        )
-        if sw_changed:
-            x_sw = COL_L + 20
-            tft.fillrect((x_sw, OY + 52), (160 - x_sw, 8), BLACK)
-            x = x_sw
-            for sw in ['sw1', 'sw2', 'sw3', 'sw4']:
-                pressed = bool(btns.get(sw))
-                color = GREEN if pressed else GRAY
-                tft.text((x, OY + 52), sw.upper(), color, FONT, 1)
-                prev[sw] = pressed
-                x += 34
+        if current_screen == MODE_MAIN:
+            # Joysticki + potencjometr
+            vals = {
+                'j1x': (joy[0],              VAL_L, OY +  0),
+                'j1y': (joy[1],              VAL_L, OY + 12),
+                'j2x': (joy[2],              VAL_R, OY +  0),
+                'j2y': (joy[3],              VAL_R, OY + 12),
+                'pot': (pots.get('pot1', 0), VAL_L, OY + 24),
+            }
+            for key, (v, x, y) in vals.items():
+                if prev.get(key) != v:
+                    tft.fillrect((x, y), (30, 8), BLACK)
+                    tft.text((x, y), pad(v), WHITE, FONT, 1)
+                    prev[key] = v
+
+            # Przyciski bt1–bt8
+            bt_changed = any(
+                prev.get(f'bt{i+1}') != bool(btns.get(f'bt{i+1}'))
+                for i in range(8)
+            )
+            if bt_changed:
+                x_bt = COL_L + 20
+                tft.fillrect((x_bt, OY + 36), (160 - x_bt, 8), BLACK)
+                x = x_bt
+                for i in range(8):
+                    pressed = bool(btns.get(f'bt{i+1}'))
+                    color = GREEN if pressed else GRAY
+                    tft.text((x, OY + 36), str(i + 1), color, FONT, 1)
+                    prev[f'bt{i+1}'] = pressed
+                    x += 16
+
+            # Switche sw1–sw4
+            sw_changed = any(
+                prev.get(sw) != bool(btns.get(sw))
+                for sw in ['sw1', 'sw2', 'sw3', 'sw4']
+            )
+            if sw_changed:
+                x_sw = COL_L + 20
+                tft.fillrect((x_sw, OY + 52), (160 - x_sw, 8), BLACK)
+                x = x_sw
+                for sw in ['sw1', 'sw2', 'sw3', 'sw4']:
+                    pressed = bool(btns.get(sw))
+                    color = GREEN if pressed else GRAY
+                    tft.text((x, OY + 52), sw.upper(), color, FONT, 1)
+                    prev[sw] = pressed
+                    x += 34
 
         # Pakowanie i wysyłka
         btn_mask = 0
@@ -138,10 +186,13 @@ def run(tft):
         if btns.get('sw4'):
             btn_mask |= (1 << 9)
 
+        # Pakiet: 4 * joystick (b), 1 * pot1 (B), 1 * ekran (B), maska przycisków (H)
+        # Format: 4bBBH  →  joy0, joy1, joy2, joy3, pot1, screen, btn_mask
         data_packet = struct.pack(
-            '4bBH',
+            '4bBBH',
             joy[0], joy[1], joy[2], joy[3],
             pots.get('pot1', 0),
+            current_screen & 0xFF,
             btn_mask
         )
 
@@ -151,7 +202,7 @@ def run(tft):
         except OSError:
             pass
 
-        if tx_count % 10 == 0:
+        if current_screen == 0 and tx_count % 10 == 0:
             tft.fillrect((COL_L + 20, OY + 68), (80, 8), BLACK)
             tft.text((COL_L + 20, OY + 68), str(tx_count), GREEN, FONT, 1)
 
