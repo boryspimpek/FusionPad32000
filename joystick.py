@@ -23,7 +23,7 @@ def init(ads1_instance, ads2_instance):
     global ads1, ads2
     ads1 = ads1_instance
     ads2 = ads2_instance
-    print("✓ Moduł joystick zainicjalizowany")
+    print("Moduł joystick zainicjalizowany")
 
 
 def _map_axis(val, config, invert=False):

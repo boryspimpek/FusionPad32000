@@ -25,7 +25,7 @@ def init(i2c_bus, pcf_address=0x20):
     for name, pin_num in GPIO_BUTTONS.items():
         gpio_pins[name] = machine.Pin(pin_num, machine.Pin.IN, machine.Pin.PULL_UP)
     
-    print(f"✓ Przyciski zainicjalizowane (PCF8574: 0x{PCF_ADDR:02X}, GPIO: {list(GPIO_BUTTONS.keys())})")
+    print(f"Przyciski zainicjalizowane")
 
 def get_data():
     """
