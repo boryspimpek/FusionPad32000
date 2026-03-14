@@ -73,29 +73,21 @@ def run(tft):
         tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
 
     def draw_simple_screen(label):
-        """
-        Dwie listy obok siebie:
-
-        action A = L1   R1 = action E
-        action B = L2   R2 = action F
-        action C = L3   R3 = action G
-        action D = L4   R4 = action H
-        """
         tft.fill(BLACK)
         draw_header()
 
         # Layout (pod nagłówkiem, nad czerwonym napisem)
         LIST_Y = 45
         ROW_H = 16
-        X_L = 10
+        X_L = 5
         X_R = 89
 
         if label == "screen2":
-            left = ["actionA L1", "actionB L2", "actionC L3", "actionD L4"]
-            right = ["R1 actionE", "R2 actionF", "R3 actionG", "R4 actionH"]
+            left = [" forward L1", "    back L2", "    wave L3", "    tilt L4"]
+            right = ["R1 forward", "R2 back", "R3 arms", "R4 steps"]
         else:  # "screen3"
-            left = ["actionA L1", "actionB L2", "actionC L3", "actionD L4"]
-            right = ["R1 actionE", "R2 actionF", "R3 actionG", "R4 actionH"]
+            left = [" circles L1", "   steps L2", "   steps L3", "    toes L4"]
+            right = ["R1 spin", "R2 boogie", "R3 balerina", "R4 weird"]
 
         for i in range(4):
             y = LIST_Y + i * ROW_H
