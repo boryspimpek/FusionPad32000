@@ -39,7 +39,7 @@ tft.fill(ST7735.TFT.BLACK)  # Wyczyść ekran
 
 while True:
     wybor = menu.show(tft)
-    
+
     if wybor == "PC Gamepad":
         import mode_gamepad
         mode_gamepad.run(tft)
@@ -52,6 +52,6 @@ while True:
     elif wybor == "Calibration": # <--- NOWA OPCJA
         import mode_calibration
         mode_calibration.run(tft, ads1, ads2)
-
-
-
+    elif wybor == "Raw ADC": # <--- NOWA OPCJA
+        import mode_raw_adc
+        mode_raw_adc.run(tft, ads1, ads2)

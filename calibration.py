@@ -1,6 +1,6 @@
-import machine
+import machine # type: ignore
 import time
-from ads1x15 import ADS1115
+from ads1x15 import ADS1115 # type: ignore
 
 # --- Konfiguracja I2C ---
 i2c = machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=400000)
@@ -54,7 +54,7 @@ while time.time() - start_time < 10:
     for i in range(6):
         if current[i] < mins[i]: mins[i] = current[i]
         if current[i] > maxs[i]: maxs[i] = current[i]
-    
+
     # Podgląd na żywo w terminalu
     print("Mins: {}  Maxs: {}".format(mins, maxs), end='\r')
     time.sleep(0.02)

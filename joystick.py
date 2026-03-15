@@ -5,7 +5,7 @@ CAL = {
     "LEFT_X": {"min": 3472,  "mid": 16447, "max": 30074},
     "LEFT_Y": {"min": 3330, "mid": 16860, "max": 29993},
     "RIGHT_X": {"min": 104, "mid": 13339, "max": 27596},
-    "RIGHT_Y": {"min": 104, "mid": 13591, "max": 27599},
+    "RIGHT_Y": {"min": 106, "mid": 13834, "max": 27940},
 }
 
 # Kalibracja potencjometrów (0-100%)
@@ -55,13 +55,13 @@ def get_data():
     """Zwraca [LEWY_X, LEWY_Y, PRAWY_X, PRAWY_Y]"""
     if ads1 is None or ads2 is None:
         raise RuntimeError("Moduł joystick nie zainicjalizowany!")
-    
+
     try:
         ads1_ch1 = ads1.read(rate=4, channel1=1)
         ads1_ch2 = ads1.read(rate=4, channel1=2)
         ads2_ch1 = ads2.read(rate=4, channel1=1)
         ads2_ch2 = ads2.read(rate=4, channel1=2)
-        
+
         return [
             _map_axis(ads2_ch2, CAL["LEFT_X"]),
             _map_axis(ads2_ch1, CAL["LEFT_Y"]),
@@ -76,11 +76,11 @@ def get_potentiometers():
     """Zwraca słownik {'pot1': 0-100, 'pot2': 0-100}"""
     if ads1 is None or ads2 is None:
         raise RuntimeError("Moduł joystick nie zainicjalizowany!")
-    
+
     try:
         pot2_raw = ads1.read(rate=4, channel1=0)
         pot1_raw = ads2.read(rate=4, channel1=0)
-        
+
         return {
             'pot1': _map_pot(pot1_raw, POT_CAL["POT1"], invert=True),  # Zmień na True żeby odwrócić
             'pot2': _map_pot(pot2_raw, POT_CAL["POT2"], invert=True),   # Zmień na True żeby odwrócić
@@ -88,7 +88,7 @@ def get_potentiometers():
     except OSError as e:
         print(f"Błąd odczytu potencjometrów: {e}")
         return {'pot1': 0, 'pot2': 0}
-    
+
 def get_all():
     """Zwraca wszystko razem: (joystick_data, potentiometers)"""
     return get_data(), get_potentiometers()

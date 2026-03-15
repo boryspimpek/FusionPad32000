@@ -17,29 +17,29 @@ def center_x(text, screen_w=160, char_w=6):
     return (screen_w - len(text) * char_w) // 2
 
 def show(tft):
-    opcje = ["PC Gamepad", "RC Transmitter", "Robot Controller", "Calibration"]
+    opcje = ["PC Gamepad", "RC Transmitter", "Robot Controller", "Calibration", "Raw ADC"]
     ilosc = len(opcje)
     wybrany = -1
 
     BLACK = ST7735.TFT.BLACK
     WHITE = ST7735.TFT.WHITE
     CYAN  = ST7735.TFT.CYAN
-    GREY  = 0x7BEF 
+    GREY  = 0x7BEF
 
     # --- Layout ---
-    MENU_X = 25  
-    CURSOR_X = 10 
+    MENU_X = 25
+    CURSOR_X = 10
     START_Y = 40  # Lekko podciągnięte do góry, żeby zmieścić 4 opcje
     SPACING = 20  # Nieco mniejszy odstęp dla lepszego balansu
 
     tft.fill(BLACK)
-    
+
     # Nagłówek w ramce
     tft.rect((5, 5), (150, 25), CYAN)
     tft.text((center_x("CONTROL MODE"), 13), "CONTROL MODE", CYAN, FONT, 1)
-    
-    # Linia boczna (wydłużona do 80, aby objąć 4 opcje)
-    tft.vline((18, START_Y - 5), 80, GREY)
+
+    # Linia boczna (wydłużona, aby objąć wszystkie opcje)
+    tft.vline((18, START_Y - 5), 100, GREY)
 
     # Statyczne rysowanie opcji
     for i, opcja in enumerate(opcje):
@@ -59,15 +59,15 @@ def show(tft):
             # 1. Wyczyść stary kursor I przywróć kolor tekstu
             if wybrany != -1:
                 old_y = START_Y + wybrany * SPACING
-                tft.text((CURSOR_X, old_y), " ", BLACK, FONT, 1) 
+                tft.text((CURSOR_X, old_y), " ", BLACK, FONT, 1)
                 tft.text((MENU_X, old_y), opcje[wybrany], GREY, FONT, 1)
 
             # 2. Narysuj nowy kursor i podświetl tekst
             wybrany = nowy_wybor
             new_y = START_Y + wybrany * SPACING
-            
-            tft.text((CURSOR_X, new_y), ">", CYAN, FONT, 1) 
-            tft.text((MENU_X, new_y), opcje[wybrany], WHITE, FONT, 1) 
+
+            tft.text((CURSOR_X, new_y), ">", CYAN, FONT, 1)
+            tft.text((MENU_X, new_y), opcje[wybrany], WHITE, FONT, 1)
 
         # Obsługa przycisku zatwierdzenia
         if btns['sw1']:
@@ -77,7 +77,7 @@ def show(tft):
                 time.sleep(0.05)
                 tft.text((CURSOR_X, START_Y + wybrany * SPACING), ">", CYAN, FONT, 1)
                 time.sleep(0.05)
-            
+
             # Czekaj na puszczenie przycisku (debouncing)
             while buttons.get_data()['sw1']:
                 time.sleep(0.01)
