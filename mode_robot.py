@@ -8,7 +8,12 @@ import ST7735 # type: ignore
 import glcdfont
 
 FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}
-RECEIVER_MAC = b'\x98\x88\xe0\xd1\x82<'
+# Lista MAC adresów odbiorników
+RECEIVER_MACS = [
+    b'\x5c\x01\x3b\x6c\x1c\x48',  # Pierwszy odbiornik
+    b'\x98\x88\xe0\xd1\x82\x3c'   # Drugi odbiornik (zakomentowany wcześniej)
+]
+current_mac_index = 0  # Indeks aktualnego MAC
 
 # Kolory
 BLACK  = ST7735.TFT.BLACK
@@ -28,6 +33,9 @@ def pad(val, width=4):
     s = str(val)
     return ' ' * (width - len(s)) + s
 
+def mac_to_str(mac):
+    return ':'.join('%02x' % b for b in mac)
+
 def draw_btn(tft, x, y, label, pressed):
     color = GREEN if pressed else GRAY
     tft.text((x, y), label, color, FONT, 1)
@@ -36,13 +44,14 @@ def center_x(text, screen_w=160, char_w=6):
     return (screen_w - len(text) * char_w) // 2
 
 def run(tft):
+    global current_mac_index
     sta = network.WLAN(network.STA_IF)
     sta.active(True)
 
     e = espnow.ESPNow()
     e.active(True)
     try:
-        e.add_peer(RECEIVER_MAC)
+        e.add_peer(RECEIVER_MACS[current_mac_index])
     except OSError:
         pass
 
@@ -68,8 +77,8 @@ def run(tft):
         tft.text((COL_R, OY + 12), "J2Y:", CYAN,   FONT, 1)
         tft.text((COL_L, OY + 24), "POT:", YELLOW, FONT, 1)
         tft.text((COL_L, OY + 36), "BT:",  WHITE,  FONT, 1)
-        tft.text((COL_L, OY + 52), "SW:",  WHITE,  FONT, 1)
-        tft.text((COL_L, OY + 68), "TX:",  GRAY,   FONT, 1)
+        tft.text((COL_L, OY + 48), "SW:",  WHITE,  FONT, 1)
+        tft.text((COL_L, OY + 60), "MAC:", RED,    FONT, 1)
         tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
 
     def draw_simple_screen(label):
@@ -107,6 +116,18 @@ def run(tft):
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
 
+        # Przełączanie MAC za pomocą SW2
+        if btns.get('sw2') and not prev.get('sw2', False):
+            current_mac_index = (current_mac_index + 1) % len(RECEIVER_MACS)
+            try:
+                e.add_peer(RECEIVER_MACS[current_mac_index])
+            except OSError:
+                pass
+            if current_screen == MODE_MAIN:
+                tft.fillrect((COL_L + 30, OY + 60), (120, 8), BLACK)
+                tft.text((COL_L + 30, OY + 60), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
+        prev['sw2'] = btns.get('sw2')
+
         # Wybór ekranu potencjometrem (POT2)
         pot2_val = pots.get('pot2', 0)
         # mapujemy 0–100 → 0,1,2 (MODE_MAIN / MODE_SCREEN2 / MODE_SCREEN3)
@@ -117,6 +138,8 @@ def run(tft):
             prev.clear()
             if current_screen == MODE_MAIN:
                 draw_main_screen()
+                tft.fillrect((COL_L + 30, OY + 60), (120, 8), BLACK)
+                tft.text((COL_L + 30, OY + 60), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
             elif current_screen == MODE_SCREEN2:
                 draw_simple_screen("screen2")
             else:  # MODE_SCREEN3
@@ -160,12 +183,12 @@ def run(tft):
             )
             if sw_changed:
                 x_sw = COL_L + 20
-                tft.fillrect((x_sw, OY + 52), (160 - x_sw, 8), BLACK)
+                tft.fillrect((x_sw, OY + 48), (160 - x_sw, 8), BLACK)
                 x = x_sw
                 for sw in ['sw1', 'sw2', 'sw3', 'sw4']:
                     pressed = bool(btns.get(sw))
                     color = GREEN if pressed else GRAY
-                    tft.text((x, OY + 52), sw.upper(), color, FONT, 1)
+                    tft.text((x, OY + 48), sw.upper(), color, FONT, 1)
                     prev[sw] = pressed
                     x += 34
 
@@ -190,14 +213,16 @@ def run(tft):
         )
 
         try:
-            e.send(RECEIVER_MAC, data_packet, False)
+            e.send(RECEIVER_MACS[current_mac_index], data_packet, False)
             tx_count += 1
         except OSError:
             pass
 
-        if current_screen == 0 and tx_count % 10 == 0:
-            tft.fillrect((COL_L + 20, OY + 68), (80, 8), BLACK)
-            tft.text((COL_L + 20, OY + 68), str(tx_count), GREEN, FONT, 1)
+        # if current_screen == 0 and tx_count % 10 == 0:
+        #     tft.fillrect((COL_L + 20, OY + 68), (80, 8), BLACK)
+        #     tft.text((COL_L + 20, OY + 68), str(tx_count), GREEN, FONT, 1)
+        #     tft.fillrect((COL_L + 30, OY + 80), (120, 8), BLACK)
+        #     tft.text((COL_L + 30, OY + 80), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
 
         # Wyjście: SW1 + SW2 przez 2 sekundy
         if btns.get('sw1') and btns.get('sw2'):
