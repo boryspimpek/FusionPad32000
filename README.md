@@ -81,6 +81,9 @@ The system is divided into specialized modules:
 | **SDA** | 21 | I2C Data Line |
 | **SCL** | 22 | I2C Clock Line |
 
+---
+<img src="images/6.jpg" width="400"> <img src="images/7.jpg" width="400">
+
 ## ⚙️ Software Architecture
 
 ### 📡 Communication Protocols
@@ -122,5 +125,3 @@ The system is divided into specialized modules:
 2. Use potentiometr to highlight a mode.
 3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
 4. Launch your desired mode and enjoy zero-drift precision!
-
-<img src="images/6.jpg" width="400"> <img src="images/7.jpg" width="400">
