@@ -123,26 +123,4 @@ The system is divided into specialized modules:
 3. Select **"Calibration"** on the first run to ensure the Hall Effect joysticks are properly centered.
 4. Launch your desired mode and enjoy zero-drift precision!
 
-## 💻 Data Acquisition (ADC) Mapping
 <img src="images/6.jpg" width="400"> <img src="images/7.jpg" width="400">
-
-The project uses two **ADS1115** (16-bit) converters to handle high-resolution analog data:
-
-### ADS1 (Address: 0x48)
-| Channel | Type | Description |
-|:---:|:---|:---|
-| **A0** | 🎚️ Pot | Potentiometer #1 |
-| **A1** | 🕹️ Joy 1 | Axis X (Hall Effect) |
-| **A2** | 🕹️ Joy 1 | Axis Y (Hall Effect) |
-
-### ADS2 (Address: 0x49)
-| Channel | Type | Description |
-|:---:|:---|:---|
-| **A0** | 🎚️ Pot | Potentiometer #2 |
-| **A1** | 🕹️ Joy 2 | Axis X (Hall Effect) |
-| **A2** | 🕹️ Joy 2 | Axis Y (Hall Effect) |
-| **A3** | 🔋 Bat | Battery Monitoring |
-
-> **Note:** The 8 tact switches are not connected directly to the ESP32 but are routed through the **PCF8574** expander at I2C address `0x20`.
-
-
