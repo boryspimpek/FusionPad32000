@@ -117,16 +117,6 @@ The system is divided into specialized modules:
   - Real-time telemetry display
   - Flexible button mapping for robot commands
 
-### 🔧 Hardware Abstraction
-* **I2C (400kHz):** High-speed bus for real-time data from dual **ADS1115** ADCs and the **PCF8574** IO expander.
-* **SPI (20MHz):** High-bandwidth link for the TFT display to ensure smooth UI animations and 60FPS refresh rates.
-
-### 📂 File Structure
-* `main.py`: System entry point, initializes hardware and handles mode selection.
-* `menu.py`: Graphical UI handler for the display.
-* `joystick.py` / `buttons.py`: Hardware abstraction layers for input processing.
-* `mode_*.py`: Isolated logic for each specific use case.
-
 ## 🚀 Quick Start
 1. Power on the FusionPad-32.
 2. Use potentiometr to highlight a mode.
