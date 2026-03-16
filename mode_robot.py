@@ -110,6 +110,7 @@ def run(tft):
     exit_timer = 0
     prev = {}
     current_screen = -1
+    prev_mac = None
 
     while True:
         joy  = joystick.get_data()
@@ -123,9 +124,7 @@ def run(tft):
                 e.add_peer(RECEIVER_MACS[current_mac_index])
             except OSError:
                 pass
-            if current_screen == MODE_MAIN:
-                tft.fillrect((COL_L + 30, OY + 60), (120, 8), BLACK)
-                tft.text((COL_L + 30, OY + 60), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
+            prev_mac = None  # Zmuszamy odświeżenie MAC
         prev['sw2'] = btns.get('sw2')
 
         # Wybór ekranu potencjometrem (POT2)
@@ -138,8 +137,7 @@ def run(tft):
             prev.clear()
             if current_screen == MODE_MAIN:
                 draw_main_screen()
-                tft.fillrect((COL_L + 30, OY + 60), (120, 8), BLACK)
-                tft.text((COL_L + 30, OY + 60), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
+                prev_mac = None  # Zmuszamy odświeżenie MAC przy przejściu na główny ekran
             elif current_screen == MODE_SCREEN2:
                 draw_simple_screen("screen2")
             else:  # MODE_SCREEN3
@@ -191,6 +189,13 @@ def run(tft):
                     tft.text((x, OY + 48), sw.upper(), color, FONT, 1)
                     prev[sw] = pressed
                     x += 34
+
+            # Rysowanie MAC tylko gdy się zmienił
+            current_mac = RECEIVER_MACS[current_mac_index]
+            if prev_mac != current_mac:
+                tft.fillrect((COL_L + 30, OY + 60), (120, 8), BLACK)
+                tft.text((COL_L + 30, OY + 60), mac_to_str(current_mac), RED, FONT, 1)
+                prev_mac = current_mac
 
         # Pakowanie i wysyłka
         btn_mask = 0
