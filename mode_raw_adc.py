@@ -21,7 +21,7 @@ def run(tft, ads1, ads2):
     tft.fill(BLACK)
     tft.text((10, 10), "RAW ADC VALUES", CYAN, FONT, 1)
     tft.hline((5, 22), 150, GREY)
-    tft.text((10, 115), "Press SW1 to exit", GREY, FONT, 1)
+    tft.text((10, 115), "Hold SW1+SW2 to exit", GREY, FONT, 1)
 
     # Definicja kanałów do odczytu
     channels = [
@@ -32,6 +32,8 @@ def run(tft, ads1, ads2):
         ("POT1 (ADS2 CH0)", ads2, 0),
         ("POT2 (ADS1 CH0)", ads1, 0)
     ]
+
+    exit_timer = 0
 
     while True:
         for i, (name, ads, ch) in enumerate(channels):
@@ -46,11 +48,20 @@ def run(tft, ads1, ads2):
             except Exception as e:
                 print(f"ADC Error: {e}")
 
-        # Powrót do menu po naciśnięciu SW1
+        # Obsługa wyjścia (SW1 + SW2 przez 2 sekundy)
         btns = buttons.get_data()
-        if btns['sw1']:
-            while buttons.get_data()['sw1']:
-                time.sleep(0.01)
-            break
+        if btns['sw1'] and btns['sw2']:
+            if exit_timer == 0:
+                exit_timer = time.ticks_ms()
+            elif time.ticks_diff(time.ticks_ms(), exit_timer) > 2000:
+                break
+        else:
+            exit_timer = 0
 
         time.sleep(0.05)
+
+    # SPRZĄTANIE PO WYJŚCIU
+    tft.fill(BLACK)
+    tft.text((10, 60), "RELEASE BUTTONS...", WHITE, FONT, 1)
+    while buttons.get_data()['sw1'] or buttons.get_data()['sw2']:
+        time.sleep_ms(50)
