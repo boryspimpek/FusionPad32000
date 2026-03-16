@@ -74,7 +74,7 @@ def run(tft):
 
     def draw_simple_screen(label):
         tft.fill(BLACK)
-        title = "OTTO ACTION 1" if label == "screen2" else "OTTO ACTION 2"
+        title = "OTTO ACTIONS 1" if label == "screen2" else "OTTO ACTIONS 2"
         draw_header(title)
 
         # Layout (pod nagłówkiem, nad czerwonym napisem)
@@ -107,7 +107,7 @@ def run(tft):
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
 
-        # Wybór ekranu potencjometrem (POT2), analogicznie jak w głównym menu
+        # Wybór ekranu potencjometrem (POT2)
         pot2_val = pots.get('pot2', 0)
         # mapujemy 0–100 → 0,1,2 (MODE_MAIN / MODE_SCREEN2 / MODE_SCREEN3)
         new_screen = min(int((pot2_val * 3) / 101), MODE_SCREEN3)
