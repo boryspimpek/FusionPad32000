@@ -218,12 +218,6 @@ def run(tft):
         except OSError:
             pass
 
-        # if current_screen == 0 and tx_count % 10 == 0:
-        #     tft.fillrect((COL_L + 20, OY + 68), (80, 8), BLACK)
-        #     tft.text((COL_L + 20, OY + 68), str(tx_count), GREEN, FONT, 1)
-        #     tft.fillrect((COL_L + 30, OY + 80), (120, 8), BLACK)
-        #     tft.text((COL_L + 30, OY + 80), mac_to_str(RECEIVER_MACS[current_mac_index]), RED, FONT, 1)
-
         # Wyjście: SW1 + SW2 przez 2 sekundy
         if btns.get('sw1') and btns.get('sw2'):
             if exit_timer == 0:
