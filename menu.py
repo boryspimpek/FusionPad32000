@@ -30,13 +30,13 @@ def show(tft):
     MENU_X = 25
     CURSOR_X = 10
     START_Y = 40  # Lekko podciągnięte do góry, żeby zmieścić 4 opcje
-    SPACING = 20  # Nieco mniejszy odstęp dla lepszego balansu
+    SPACING = 19  # Nieco mniejszy odstęp dla lepszego balansu
 
     tft.fill(BLACK)
 
     # Nagłówek w ramce
     tft.rect((5, 5), (150, 25), CYAN)
-    tft.text((center_x("CONTROL MODE"), 13), "CONTROL MODE", CYAN, FONT, 1)
+    tft.text((center_x("FUSION PAD"), 13), "FUSION PAD", CYAN, FONT, 1)
 
     # Linia boczna (wydłużona, aby objąć wszystkie opcje)
     tft.vline((18, START_Y - 5), 100, GREY)

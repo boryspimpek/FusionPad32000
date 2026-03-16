@@ -1,14 +1,14 @@
-import machine
+import machine # type: ignore
 import time
-from ads1x15 import ADS1115
+from ads1x15 import ADS1115 # type: ignore
 import joystick
 import buttons
 
 print("Inicjalizacja...")
 
 # === INICJALIZACJA HARDWARE ===
-i2c = machine.I2C(0, 
-                  scl=machine.Pin(22), 
+i2c = machine.I2C(0,
+                  scl=machine.Pin(22),
                   sda=machine.Pin(21),
                   freq=100000)
 
@@ -29,19 +29,19 @@ while True:
         lx, ly, rx, ry = joystick.get_data()
         pots = joystick.get_potentiometers()
         btns = buttons.get_data()
-        
+
         # Format przycisków
         pressed = [name for name, state in sorted(btns.items()) if state]
         btn_status = " ".join(pressed) if pressed else "---"
-        
+
         # Wyświetlanie
         print(f"\rL:[{lx:>4},{ly:>4}] R:[{rx:>4},{ry:>4}] "
               f"POT1:{pots['pot1']:>3}% POT2:{pots['pot2']:>3}% | "
               f"{btn_status:<30} #{iteration:>5}", end='')
-        
+
         iteration += 1
         time.sleep(0.15)
-        
+
     except KeyboardInterrupt:
         print("\n\nZatrzymano.")
         break

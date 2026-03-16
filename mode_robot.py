@@ -55,13 +55,13 @@ def run(tft):
     VAL_L = COL_L + 26  # miejsce na wartość (za 4-znakowym nagłówkiem)
     VAL_R = COL_R + 26
 
-    def draw_header():
+    def draw_header(title):
         tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
-        tft.text((center_x("ROBOT CONTROLLER"), 13), "ROBOT CONTROLLER", ST7735.TFT.CYAN, FONT, 1)
+        tft.text((center_x(title), 13), title, ST7735.TFT.YELLOW, FONT, 1)
 
     def draw_main_screen():
         tft.fill(BLACK)
-        draw_header()
+        draw_header("OTTO GAMEPAD")
         tft.text((COL_L, OY +  0), "J1X:", CYAN,   FONT, 1)
         tft.text((COL_R, OY +  0), "J2X:", CYAN,   FONT, 1)
         tft.text((COL_L, OY + 12), "J1Y:", CYAN,   FONT, 1)
@@ -70,11 +70,12 @@ def run(tft):
         tft.text((COL_L, OY + 36), "BT:",  WHITE,  FONT, 1)
         tft.text((COL_L, OY + 52), "SW:",  WHITE,  FONT, 1)
         tft.text((COL_L, OY + 68), "TX:",  GRAY,   FONT, 1)
-        tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
+        tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
 
     def draw_simple_screen(label):
         tft.fill(BLACK)
-        draw_header()
+        title = "OTTO ACTION 1" if label == "screen2" else "OTTO ACTION 2"
+        draw_header(title)
 
         # Layout (pod nagłówkiem, nad czerwonym napisem)
         LIST_Y = 45
@@ -83,18 +84,18 @@ def run(tft):
         X_R = 89
 
         if label == "screen2":
-            left = [" forward L1", "    back L2", "    wave L3", "    tilt L4"]
-            right = ["R1 forward", "R2 back", "R3 arms", "R4 steps"]
+            left = [" Forward L1", "    Back L2", "    Wave L3", "    Tilt L4"]
+            right = ["R1 Forward", "R2 Back", "R3 Arms", "R4 Steps"]
         else:  # "screen3"
-            left = [" circles L1", "   steps L2", "   steps L3", "    toes L4"]
-            right = ["R1 spin", "R2 boogie", "R3 balerina", "R4 weird"]
+            left = [" Circles L1", "   Steps L2", "   Steps L3", "    Toes L4"]
+            right = ["R1 Spin", "R2 Boogie", "R3 Balerina", "R4 Weird"]
 
         for i in range(4):
             y = LIST_Y + i * ROW_H
             tft.text((X_L, y), left[i], WHITE, FONT, 1)
             tft.text((X_R, y), right[i], WHITE, FONT, 1)
 
-        tft.text((center_x("HOLD SW1+SW2=EXIT"), 118), "HOLD SW1+SW2=EXIT", RED, FONT, 1)
+        tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
 
     tx_count   = 0
     exit_timer = 0
