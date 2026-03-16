@@ -93,10 +93,10 @@ def draw_main_screen(tft):
     tft.text((layout['COL_RIGHT'], layout['MARGIN_TOP'] +  0), "J2X:", CYAN,   FONT, 1)
     tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 12), "J1Y:", CYAN,   FONT, 1)
     tft.text((layout['COL_RIGHT'], layout['MARGIN_TOP'] + 12), "J2Y:", CYAN,   FONT, 1)
-    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 24), "POT:", YELLOW, FONT, 1)
-    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 36), "BT:",  WHITE,  FONT, 1)
-    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 48), "SW:",  WHITE,  FONT, 1)
-    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 60), "MAC:", RED,    FONT, 1)
+    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 24), "POT:", CYAN, FONT, 1)
+    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 36), "BT:",  CYAN,  FONT, 1)
+    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 48), "SW:",  CYAN,  FONT, 1)
+    tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 60), "MAC:", CYAN,    FONT, 1)
     tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
 
 def draw_actions_screen(tft, screen_key):
@@ -127,7 +127,7 @@ def update_joystick_display(tft, joy_data, prev_values):
     for key, (value, x, y) in vals.items():
         if prev_values.get(key) != value:
             tft.fillrect((x, y), (30, 8), BLACK)
-            tft.text((x, y), pad(value), WHITE, FONT, 1)
+            tft.text((x, y), pad(value), YELLOW, FONT, 1)
             prev_values[key] = value
 
 def update_potentiometer_display(tft, pot_value, prev_values):
@@ -135,7 +135,7 @@ def update_potentiometer_display(tft, pot_value, prev_values):
     layout = UI_LAYOUT
     if prev_values.get('pot') != pot_value:
         tft.fillrect((layout['VAL_LEFT'], layout['MARGIN_TOP'] + 24), (30, 8), BLACK)
-        tft.text((layout['VAL_LEFT'], layout['MARGIN_TOP'] + 24), pad(pot_value), WHITE, FONT, 1)
+        tft.text((layout['VAL_LEFT'], layout['MARGIN_TOP'] + 24), pad(pot_value), YELLOW, FONT, 1)
         prev_values['pot'] = pot_value
 
 def update_buttons_display(tft, btn_data, prev_values):
@@ -181,7 +181,7 @@ def update_mac_display(tft, mac_address, prev_mac):
     layout = UI_LAYOUT
     if prev_mac != mac_address:
         tft.fillrect((layout['COL_LEFT'] + 30, layout['MARGIN_TOP'] + 60), (120, 8), BLACK)
-        tft.text((layout['COL_LEFT'] + 30, layout['MARGIN_TOP'] + 60), mac_to_str(mac_address), RED, FONT, 1)
+        tft.text((layout['COL_LEFT'] + 30, layout['MARGIN_TOP'] + 60), mac_to_str(mac_address), YELLOW, FONT, 1)
         return mac_address
     return prev_mac
 
