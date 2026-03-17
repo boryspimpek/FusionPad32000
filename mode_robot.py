@@ -69,7 +69,7 @@ servo_trims = [0, 0, 0, 0, 0, 0]
 
 # Komunikacja
 PACKET_FORMAT = '4bBBH'
-UPDATE_RATE_MS = 20  # 50 Hz
+UPDATE_RATE_MS = 5 
 EXIT_HOLD_TIME_MS = 2000
 
 def pad(val, width=4):
@@ -147,18 +147,27 @@ def draw_servo_list(tft, selected_servo_index=None, show_cursor=False):
         trim_str = str(trim_value)
         if trim_value >= 0:
             trim_str = "+" + trim_str
-        tft.text((layout['VAL_LEFT'] + 15, y), trim_str, YELLOW, FONT, 1)
+        tft.text((layout['VAL_LEFT'] + 100, y), trim_str, YELLOW, FONT, 1)
 
 def draw_trim_screen(tft):
-    """Rysuje ekran trimowania serw"""
+    """Rysuje statyczny interfejs ekranu trimowania (wywoływane raz)"""
     tft.fill(BLACK)
     draw_header(tft, "SERVO TRIM")
+
+    layout = UI_LAYOUT
+
+    # # Rysuj pionową linię oddzielającą
+    tft.vline((layout['COL_LEFT'] + 8, layout['LIST_Y'] - 10), 
+              6 * layout['ROW_HEIGHT'], GRAY)
+
+    # Rysujemy nazwy serw raz na samym początku
+    for i in range(6):
+        y = (layout['LIST_Y'] - 10) + i * layout['ROW_HEIGHT']
+        tft.text((layout['COL_LEFT'] + 15, y), SERVO_NAMES[i], WHITE, FONT, 1)
     
-    # draw_servo_list(tft)
-    
-    # Instrukcje
+    # Instrukcje na dole
     tft.text((center_x("POT1: SELECT"), 110), "POT1: SELECT", GREEN, FONT, 1)
-    tft.text((center_x("BT8: SAVE   BT1:+1 BT2:-1"), 122), "BT8: SAVE   BT1:+1 BT2:-1", YELLOW, FONT, 1)
+    tft.text((center_x("BT8: SAVE   BT1:+1 BT2:-1"), 122), "BT8: SAVE   BT1:+1 BT2:-1", GREEN, FONT, 1)
 
 def update_joystick_display(tft, joy_data, prev_values):
     """Aktualizuje wyświetlanie wartości joysticków"""
@@ -231,36 +240,33 @@ def update_mac_display(tft, mac_address, prev_mac):
         return mac_address
     return prev_mac
 
-def update_trim_display(tft, selected_servo_index, prev_values):
-    """Aktualizuje wyświetlanie trybu trimowania"""
-    
-    # Podświetl wybrany serwo kursorem i aktualizuj tylko zmienione wartości
+def update_trim_display(tft, selected_servo_index, prev_values, force_refresh=False):
+    """Aktualizuje tylko kursor i wartości liczbowe"""
     layout = UI_LAYOUT
     
-    # # Rysuj pionową linię oddzielającą
-    tft.vline((layout['COL_LEFT'] + 8, layout['LIST_Y'] - 10), 
-              6 * layout['ROW_HEIGHT'], GRAY)
-    
+    # 1. Obsługa kursora (rysujemy tylko jeśli się zmienił)
+    prev_idx = prev_values.get('last_servo_idx', -1)
+    if prev_idx != selected_servo_index or force_refresh:
+        # Wymaż stary kursor
+        if prev_idx != -1:
+            old_y = (layout['LIST_Y'] - 10) + prev_idx * layout['ROW_HEIGHT']
+            tft.text((layout['COL_LEFT'], old_y), " ", BLACK, FONT, 1)
+        # Narysuj nowy
+        new_y = (layout['LIST_Y'] - 10) + selected_servo_index * layout['ROW_HEIGHT']
+        tft.text((layout['COL_LEFT'], new_y), ">", CYAN, FONT, 1)
+        prev_values['last_servo_idx'] = selected_servo_index
+
+    # 2. Obsługa wartości (pętla po wszystkich, ale fillrect tylko dla zmienionych)
     for i in range(6):
-        y = (layout['LIST_Y'] - 10) + i * layout['ROW_HEIGHT']
-        servo_name = SERVO_NAMES[i]
         trim_value = servo_trims[i]
-        
-        # Kursor
-        if i == selected_servo_index:
-            tft.text((layout['COL_LEFT'], y), ">", CYAN, FONT, 1)
-        else:
-            tft.text((layout['COL_LEFT'], y), " ", BLACK, FONT, 1)
-        
-        # Nazwa serwa
-        tft.text((layout['COL_LEFT'] + 15, y), servo_name, WHITE, FONT, 1)
-        
-        # Wartość trimu - tylko jeśli się zmieniła
         trim_key = f'trim_{i}'
-        if prev_values.get(trim_key) != trim_value:
-            trim_str = str(trim_value)
-            if trim_value >= 0:
-                trim_str = "+" + trim_str
+        
+        if prev_values.get(trim_key) != trim_value or force_refresh:
+            y = (layout['LIST_Y'] - 10) + i * layout['ROW_HEIGHT']
+            # Czyścimy tylko obszar liczby (X dostosowany do Twojego layoutu)
+            tft.fillrect((layout['VAL_LEFT'] + 100, y), (35, 8), BLACK)
+            
+            trim_str = f"{'+' if trim_value >= 0 else ''}{trim_value}"
             tft.text((layout['VAL_LEFT'] + 100, y), trim_str, YELLOW, FONT, 1)
             prev_values[trim_key] = trim_value
 
@@ -440,24 +446,39 @@ def run(tft):
             state['prev_mac'] = update_mac_display(tft, RECEIVER_MACS[current_mac_index], state['prev_mac'])
 
         elif state['current_screen'] == MODE_TRIM:
-            # Wybór serwa (Potencjometr 1)
+            trim_changed = False  # Flaga zmiany wartości
+            
+            # --- Wybór serwa (Potencjometr 1) ---
             p1 = pot_data.get('pot1', 0)
-            if abs(p1 - state['prev_pot1']) > 5:
-                state['selected_servo'] = min(int((p1 * 6) / 101), 5)
+            if abs(p1 - state['prev_pot1']) > 3: # Mała histereza
+                new_idx = min(int((p1 * 6) / 101), 5)
+                if new_idx != state['selected_servo']:
+                    state['selected_servo'] = new_idx
+                    # Tutaj nie ustawiamy trim_changed na True, bo update_trim_display 
+                    # i tak sprawdza zmianę kursora niezależnie
                 state['prev_pot1'] = p1
             
-            # Zmiana wartości (BT1 / BT2)
+            # --- Zmiana wartości (BT1 / BT2) ---
+            # Wykorzystujemy zbocze narastające (wciśnięty teraz, nie był wcześniej)
             if btn_data.get('bt1') and not state['prev_btn_data'].get('bt1'):
                 servo_trims[state['selected_servo']] = min(50, servo_trims[state['selected_servo']] + 1)
-                send_data(esp, RECEIVER_MACS[current_mac_index], create_trim_packet())
+                trim_changed = True
             
             if btn_data.get('bt2') and not state['prev_btn_data'].get('bt2'):
                 servo_trims[state['selected_servo']] = max(-50, servo_trims[state['selected_servo']] - 1)
-                send_data(esp, RECEIVER_MACS[current_mac_index], create_trim_packet())
+                trim_changed = True
                 
+            # --- Zapisywanie ---
             if btn_data.get('bt8') and not state['prev_btn_data'].get('bt8'):
                 send_data(esp, RECEIVER_MACS[current_mac_index], create_save_packet())
+                # Opcjonalnie: mignij nagłówkiem na zielono, że zapisano
 
+            # --- Komunikacja i UI ---
+            if trim_changed:
+                # Wysyłamy pakiet tylko gdy nastąpiła zmiana
+                send_data(esp, RECEIVER_MACS[current_mac_index], create_trim_packet())
+            
+            # Odświeżamy UI (funkcja sama sprawdzi co dokładnie przerysować)
             update_trim_display(tft, state['selected_servo'], state['prev_values'])
 
         # 6. WYSYŁANIE DANYCH STEROWANIA (tylko poza trybem TRIM)
