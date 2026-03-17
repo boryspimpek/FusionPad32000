@@ -29,6 +29,7 @@ GRAY   = 0x4208
 MODE_MAIN    = 0  # ekran z joystickami
 MODE_SCREEN2 = 1  # pierwszy ekran akcji
 MODE_SCREEN3 = 2  # drugi ekran akcji
+MODE_TRIM    = 3  # ekran trimowania serw
 
 # Layout UI
 UI_LAYOUT = {
@@ -39,8 +40,8 @@ UI_LAYOUT = {
     'VAL_LEFT': 36,          # wartości lewej kolumny
     'VAL_RIGHT': 116,        # wartości prawej kolumny
     'HEADER_HEIGHT': 25,
-    'LIST_Y': 45,
-    'ROW_HEIGHT': 16,
+    'LIST_Y': 46,
+    'ROW_HEIGHT': 12,
     'ACTION_X_LEFT': 5,
     'ACTION_X_RIGHT': 89
 }
@@ -61,6 +62,10 @@ ROBOT_ACTIONS = {
 
 # Globalny stan
 current_mac_index = 0
+
+# Konfiguracja serw
+SERVO_NAMES = ["RF Right Foot: ", "RL Right Leg: ", "RA Right Arm: ", "LF Left Foot: ", "LL Left Leg: ", "LA Left Arm: "]
+servo_trims = [0, 0, 0, 0, 0, 0]
 
 # Komunikacja
 PACKET_FORMAT = '4bBBH'
@@ -113,6 +118,47 @@ def draw_actions_screen(tft, screen_key):
         tft.text((layout['ACTION_X_RIGHT'], y), actions['right'][i], WHITE, FONT, 1)
     
     tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
+
+def draw_servo_list(tft, selected_servo_index=None, show_cursor=False):
+    """Rysuje listę serw z wartościami trim"""
+    layout = UI_LAYOUT
+    
+    # # Rysuj pionową linię oddzielającą
+    tft.vline((layout['COL_LEFT'] + 8, layout['LIST_Y'] - 10), 
+              6 * layout['ROW_HEIGHT'], GRAY)
+    
+    # Lista serw z ich wartościami trim
+    for i in range(6):
+        y = (layout['LIST_Y'] - 10) + i * layout['ROW_HEIGHT']
+        servo_name = SERVO_NAMES[i]
+        trim_value = servo_trims[i]
+        
+        # # Kursor (tylko w trybie aktualizacji)
+        if show_cursor:
+            if i == selected_servo_index:
+                tft.text((layout['COL_LEFT'], y), ">", CYAN, FONT, 1)
+            else:
+                tft.text((layout['COL_LEFT'], y), " ", BLACK, FONT, 1)
+        
+        # Nazwa serwa
+        tft.text((layout['COL_LEFT'] + 15, y), servo_name, WHITE, FONT, 1)
+        
+        # Wartość trimu
+        trim_str = str(trim_value)
+        if trim_value >= 0:
+            trim_str = "+" + trim_str
+        tft.text((layout['VAL_LEFT'] + 15, y), trim_str, YELLOW, FONT, 1)
+
+def draw_trim_screen(tft):
+    """Rysuje ekran trimowania serw"""
+    tft.fill(BLACK)
+    draw_header(tft, "SERVO TRIM")
+    
+    # draw_servo_list(tft)
+    
+    # Instrukcje
+    tft.text((center_x("POT1: SELECT"), 110), "POT1: SELECT", GREEN, FONT, 1)
+    tft.text((center_x("BT8: SAVE   BT1:+1 BT2:-1"), 122), "BT8: SAVE   BT1:+1 BT2:-1", YELLOW, FONT, 1)
 
 def update_joystick_display(tft, joy_data, prev_values):
     """Aktualizuje wyświetlanie wartości joysticków"""
@@ -185,6 +231,39 @@ def update_mac_display(tft, mac_address, prev_mac):
         return mac_address
     return prev_mac
 
+def update_trim_display(tft, selected_servo_index, prev_values):
+    """Aktualizuje wyświetlanie trybu trimowania"""
+    
+    # Podświetl wybrany serwo kursorem i aktualizuj tylko zmienione wartości
+    layout = UI_LAYOUT
+    
+    # # Rysuj pionową linię oddzielającą
+    tft.vline((layout['COL_LEFT'] + 8, layout['LIST_Y'] - 10), 
+              6 * layout['ROW_HEIGHT'], GRAY)
+    
+    for i in range(6):
+        y = (layout['LIST_Y'] - 10) + i * layout['ROW_HEIGHT']
+        servo_name = SERVO_NAMES[i]
+        trim_value = servo_trims[i]
+        
+        # Kursor
+        if i == selected_servo_index:
+            tft.text((layout['COL_LEFT'], y), ">", CYAN, FONT, 1)
+        else:
+            tft.text((layout['COL_LEFT'], y), " ", BLACK, FONT, 1)
+        
+        # Nazwa serwa
+        tft.text((layout['COL_LEFT'] + 15, y), servo_name, WHITE, FONT, 1)
+        
+        # Wartość trimu - tylko jeśli się zmieniła
+        trim_key = f'trim_{i}'
+        if prev_values.get(trim_key) != trim_value:
+            trim_str = str(trim_value)
+            if trim_value >= 0:
+                trim_str = "+" + trim_str
+            tft.text((layout['VAL_LEFT'] + 100, y), trim_str, YELLOW, FONT, 1)
+            prev_values[trim_key] = trim_value
+
 # === FUNKCJE KOMUNIKACYJNE ===
 def initialize_network():
     """Inicjalizuje sieć WiFi i ESP-NOW"""
@@ -207,12 +286,21 @@ def add_peer(esp, mac_address):
 def create_data_packet(joy_data, pot_value, screen_mode, btn_mask):
     """Tworzy pakiet danych do wysłania"""
     return struct.pack(
-        PACKET_FORMAT,
+        'B4bBBH',  # Dodaj Header ID (0x01)
+        1,  # CONTROL packet ID
         joy_data[0], joy_data[1], joy_data[2], joy_data[3],
         pot_value,
         screen_mode & 0xFF,
         btn_mask
     )
+
+def create_trim_packet():
+    """Tworzy pakiet synchronizacji trimów"""
+    return struct.pack('B6b', 2, *servo_trims)  # TRIM_SYNC packet ID (0x02)
+
+def create_save_packet():
+    """Tworzy pakiet zapisu konfiguracji"""
+    return struct.pack('BB', 3, 1)  # SAVE packet ID (0x03)
 
 def create_button_mask(btn_data):
     """Tworzy maskę bitową przycisków"""
@@ -241,8 +329,8 @@ def send_data(esp, mac_address, data_packet):
 
 # === FUNKCJE STEROWANIA ===
 def switch_mac_address(current_index, btn_data, prev_btn_data, esp):
-    """Przełącza adres MAC przy wciśnięciu SW2"""
-    if btn_data.get('sw2') and not prev_btn_data.get('sw2', False):
+    """Przełącza adres MAC przy wciśnięciu SW2 (ale nie gdy SW1 jest wciśnięty)"""
+    if btn_data.get('sw2') and not prev_btn_data.get('sw2', False) and not btn_data.get('sw1'):
         new_index = (current_index + 1) % len(RECEIVER_MACS)
         add_peer(esp, RECEIVER_MACS[new_index])
         return new_index, None  # None zmusza odświeżenie MAC
@@ -250,7 +338,15 @@ def switch_mac_address(current_index, btn_data, prev_btn_data, esp):
 
 def get_screen_mode(pot_value):
     """Wybiera tryb ekranu na podstawie wartości potencjometru"""
-    return min(int((pot_value * 3) / 101), MODE_SCREEN3)
+    # Rozszerz zakres do 4 trybów: 0-25=MAIN, 26-50=SCREEN2, 51-75=SCREEN3, 76-100=TRIM
+    if pot_value <= 25:
+        return MODE_MAIN
+    elif pot_value <= 50:
+        return MODE_SCREEN2
+    elif pot_value <= 75:
+        return MODE_SCREEN3
+    else:
+        return MODE_TRIM
 
 def check_exit_condition(btn_data, exit_timer):
     """Sprawdza warunek wyjścia (SW1 + SW2 przez 2 sekundy)"""
@@ -274,36 +370,53 @@ def cleanup(tft, esp, sta):
 
 # === GŁÓWNA FUNKCJA ===
 def run(tft):
-    """Główna funkcja trybu robota"""
+    """Główna funkcja trybu robota - WERSJA POPRAWIONA"""
     global current_mac_index
     
-    # Inicjalizacja
+    # Inicjalizacja sieci
     sta, esp = initialize_network()
     add_peer(esp, RECEIVER_MACS[current_mac_index])
     
     # Stan aplikacji
     state = {
-        'tx_count': 0,
         'exit_timer': 0,
         'prev_values': {},
         'current_screen': -1,
         'prev_mac': None,
-        'prev_btn_data': {}
+        'prev_btn_data': {},  # Tu przechowujemy stany z poprzedniej klatki
+        'selected_servo': 0,
+        'prev_pot1': 0
     }
     
+    # Inicjalizacja słownika stanów (żeby uniknąć KeyError przy pierwszym obiegu)
+    state['prev_btn_data'] = buttons.get_data()
+
     while True:
-        # Odczyt danych wejściowych
+        # 1. Odczyt wszystkich wejść na początku pętli
         joy_data = joystick.get_data()
         pot_data = joystick.get_potentiometers()
         btn_data = buttons.get_data()
         
-        # Przełączanie MAC adresu
-        current_mac_index, state['prev_mac'] = switch_mac_address(
-            current_mac_index, btn_data, state['prev_btn_data'], esp
-        )
-        state['prev_btn_data']['sw2'] = btn_data.get('sw2')
-        
-        # Wybór ekranu
+        # 2. LOGIKA WYJŚCIA (Priorytet #1)
+        # Sprawdzamy czy SW1 i SW2 są fizycznie wciśnięte
+        if btn_data.get('sw1') and btn_data.get('sw2'):
+            if state['exit_timer'] == 0:
+                state['exit_timer'] = time.ticks_ms()
+            elif time.ticks_diff(time.ticks_ms(), state['exit_timer']) > EXIT_HOLD_TIME_MS:
+                # WARUNEK SPEŁNIONY - WYCHODZIMY
+                break
+        else:
+            # Jeśli puścisz choć jeden, licznik się zeruje
+            state['exit_timer'] = 0
+
+        # 3. ZMIANA ADRESU MAC (Tylko przy kliknięciu SW2 i gdy SW1 jest puszczony)
+        # Wykrywamy "zbocze narastające" - teraz jest wciśnięty, a wcześniej nie był
+        if btn_data.get('sw2') and not state['prev_btn_data'].get('sw2') and not btn_data.get('sw1'):
+            current_mac_index = (current_mac_index + 1) % len(RECEIVER_MACS)
+            add_peer(esp, RECEIVER_MACS[current_mac_index])
+            state['prev_mac'] = None # Wymuś odświeżenie tekstu na LCD
+
+        # 4. WYBÓR EKRANU (Potencjometr 2)
         new_screen = get_screen_mode(pot_data.get('pot2', 0))
         if new_screen != state['current_screen']:
             state['current_screen'] = new_screen
@@ -311,37 +424,54 @@ def run(tft):
             
             if state['current_screen'] == MODE_MAIN:
                 draw_main_screen(tft)
-                state['prev_mac'] = None  # Odśwież MAC przy powrocie
             elif state['current_screen'] == MODE_SCREEN2:
                 draw_actions_screen(tft, 'screen2')
-            else:  # MODE_SCREEN3
+            elif state['current_screen'] == MODE_SCREEN3:
                 draw_actions_screen(tft, 'screen3')
-        
-        # Aktualizacja UI dla głównego ekranu
+            elif state['current_screen'] == MODE_TRIM:
+                draw_trim_screen(tft)
+
+        # 5. AKTUALIZACJA UI I OBSŁUGA TRIMÓW
         if state['current_screen'] == MODE_MAIN:
             update_joystick_display(tft, joy_data, state['prev_values'])
             update_potentiometer_display(tft, pot_data.get('pot1', 0), state['prev_values'])
             update_buttons_display(tft, btn_data, state['prev_values'])
             update_switches_display(tft, btn_data, state['prev_values'])
+            state['prev_mac'] = update_mac_display(tft, RECEIVER_MACS[current_mac_index], state['prev_mac'])
+
+        elif state['current_screen'] == MODE_TRIM:
+            # Wybór serwa (Potencjometr 1)
+            p1 = pot_data.get('pot1', 0)
+            if abs(p1 - state['prev_pot1']) > 5:
+                state['selected_servo'] = min(int((p1 * 6) / 101), 5)
+                state['prev_pot1'] = p1
             
-            current_mac = RECEIVER_MACS[current_mac_index]
-            state['prev_mac'] = update_mac_display(tft, current_mac, state['prev_mac'])
-        
-        # Komunikacja
-        btn_mask = create_button_mask(btn_data)
-        data_packet = create_data_packet(
-            joy_data, pot_data.get('pot1', 0), state['current_screen'], btn_mask
-        )
-        
-        if send_data(esp, RECEIVER_MACS[current_mac_index], data_packet):
-            state['tx_count'] += 1
-        
-        # Sprawdzenie warunku wyjścia
-        state['exit_timer'], should_exit = check_exit_condition(btn_data, state['exit_timer'])
-        if should_exit:
-            break
-        
+            # Zmiana wartości (BT1 / BT2)
+            if btn_data.get('bt1') and not state['prev_btn_data'].get('bt1'):
+                servo_trims[state['selected_servo']] = min(50, servo_trims[state['selected_servo']] + 1)
+                send_data(esp, RECEIVER_MACS[current_mac_index], create_trim_packet())
+            
+            if btn_data.get('bt2') and not state['prev_btn_data'].get('bt2'):
+                servo_trims[state['selected_servo']] = max(-50, servo_trims[state['selected_servo']] - 1)
+                send_data(esp, RECEIVER_MACS[current_mac_index], create_trim_packet())
+                
+            if btn_data.get('bt8') and not state['prev_btn_data'].get('bt8'):
+                send_data(esp, RECEIVER_MACS[current_mac_index], create_save_packet())
+
+            update_trim_display(tft, state['selected_servo'], state['prev_values'])
+
+        # 6. WYSYŁANIE DANYCH STEROWANIA (tylko poza trybem TRIM)
+        if state['current_screen'] != MODE_TRIM:
+            btn_mask = create_button_mask(btn_data)
+            data_packet = create_data_packet(joy_data, pot_data.get('pot1', 0), state['current_screen'], btn_mask)
+            send_data(esp, RECEIVER_MACS[current_mac_index], data_packet)
+
+        # 7. ZAPISANIE STANU PRZYCISKÓW DO NASTĘPNEJ PETLI
+        # Robimy kopię słownika, żeby state['prev_btn_data'] nie zmieniało się w trakcie
+        for key in btn_data:
+            state['prev_btn_data'][key] = btn_data[key]
+
         time.sleep_ms(UPDATE_RATE_MS)
-    
-    # Sprzątanie
+
+    # PO WYJŚCIU Z PĘTLI
     cleanup(tft, esp, sta)
