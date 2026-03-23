@@ -31,21 +31,6 @@ MODE_SCREEN2 = 1  # pierwszy ekran akcji
 MODE_SCREEN3 = 2  # drugi ekran akcji
 MODE_TRIM    = 3  # ekran trimowania serw
 
-# === UI LAYOUT ===
-UI_LAYOUT = {
-    'MARGIN_LEFT': 10,
-    'MARGIN_TOP': 40,
-    'COL_LEFT': 10,          # lewa kolumna
-    'COL_RIGHT': 90,         # prawa kolumna
-    'VAL_LEFT': 36,          # wartości lewej kolumny
-    'VAL_RIGHT': 116,        # wartości prawej kolumny
-    'HEADER_HEIGHT': 25,
-    'LIST_Y': 46,
-    'ROW_HEIGHT': 12,
-    'ACTION_X_LEFT': 5,
-    'ACTION_X_RIGHT': 89
-}
-
 # === ROBOT ACTIONS CONFIGURATION ===
 ROBOT_ACTIONS = {
     'screen2': {
