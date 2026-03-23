@@ -42,7 +42,7 @@ class RobotUI:
         tft.text((self.center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
     
     def draw_actions_screen(self, tft, screen_key, current_mac=None):
-        """Draw robot actions screen"""
+        """Draw robot actions screen with automatic alignment"""
         tft.fill(BLACK)
         actions = ROBOT_ACTIONS[screen_key]
         
@@ -56,11 +56,46 @@ class RobotUI:
             dynamic_title = actions['title']
         
         self.draw_header(tft, dynamic_title)
-                
+        
+        # Calculate positions for symmetrical layout
+        char_width = 6
+        center_x = 80
+        
+        # L1-L4 positions (left side, centered)
+        l_positions = []
+        for i in range(4):
+            label = f"L{i+1}"
+            x = center_x - 15 - len(label) * char_width // 2
+            l_positions.append((x, label))
+        
+        # R1-R4 positions (right side, centered)
+        r_positions = []
+        for i in range(4):
+            label = f"R{i+1}"
+            x = center_x + 15 - len(label) * char_width // 2
+            r_positions.append((x, label))
+        
+        # Draw actions with proper alignment
         for i in range(4):
             y = 50 + i * 12
-            tft.text((10, y), actions['left'][i], WHITE, FONT, 1)
-            tft.text((90, y), actions['right'][i], WHITE, FONT, 1)
+            
+            # Left description (right-aligned to L1-L4)
+            left_desc = actions['left'][i]
+            l_x, l_label = l_positions[i]
+            desc_x = l_x - len(left_desc) * char_width - 2  # 2px gap
+            tft.text((desc_x, y), left_desc, CYAN, FONT, 1)
+            
+            # L1-L4 labels (white)
+            tft.text((l_x, y), l_label, WHITE, FONT, 1)
+            
+            # R1-R4 labels (white)
+            r_x, r_label = r_positions[i]
+            tft.text((r_x, y), r_label, WHITE, FONT, 1)
+            
+            # Right description (left-aligned to R1-R4)
+            right_desc = actions['right'][i]
+            desc_x = r_x + len(r_label) * char_width + 2  # 2px gap
+            tft.text((desc_x, y), right_desc, YELLOW, FONT, 1)
         
         tft.text((self.center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
     

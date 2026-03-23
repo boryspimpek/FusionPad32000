@@ -35,13 +35,13 @@ MODE_TRIM    = 3  # ekran trimowania serw
 ROBOT_ACTIONS = {
     'screen2': {
         'title': "ACTIONS 1",
-        'left': [" Forward L1", "    Back L2", "    Wave L3", "    Tilt L4"],
-        'right': ["R1 Forward", "R2 Back", "R3 Arms", "R4 Steps"]
+        'left': ["Forward", "Back", "Wave", "Tilt"],
+        'right': ["Forward", "Back", "Arms", "Steps"]
     },
     'screen3': {
         'title': "ACTIONS 2", 
-        'left': [" Circles L1", "   Steps L2", "   Steps L3", "    Toes L4"],
-        'right': ["R1 Spin", "R2 Boogie", "R3 Balerina", "R4 Weird"]
+        'left': ["Circles", "Steps", "Steps", "Toes"],
+        'right': ["Spin", "Boogie", "Balerina", "Weird"]
     }
 }
 
