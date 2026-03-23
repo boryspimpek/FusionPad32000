@@ -1,6 +1,6 @@
 # robot_ui.py - UI Management for robot controller
 import glcdfont
-from .robot_config import FONT, ROBOT_ACTIONS, SERVO_NAMES, ROBOT_NAMES, BLACK, WHITE, CYAN, YELLOW, GREEN, RED, GRAY
+from .robot_config import FONT, ROBOT_ACTIONS, SERVO_NAMES, get_robot_names, BLACK, WHITE, CYAN, YELLOW, GREEN, RED, GRAY
 
 class RobotUI:
     def __init__(self):
@@ -48,7 +48,8 @@ class RobotUI:
         
         # Create dynamic title based on current robot
         if current_mac:
-            robot_name = ROBOT_NAMES.get(current_mac, "UNKNOWN ROBOT")
+            robot_names = get_robot_names()
+            robot_name = robot_names.get(current_mac, "UNKNOWN ROBOT")
             # Extract action number from original title (e.g., ACTIONS 1" -> "1")
             action_number = actions['title'].split()[-1]
             dynamic_title = f"{robot_name} ACTIONS {action_number}"
@@ -206,7 +207,8 @@ class RobotUI:
         """Update robot name display"""
         if prev_mac != mac_address:
             tft.fillrect((40, 100), (120, 8), BLACK)
-            robot_name = ROBOT_NAMES.get(mac_address, "UNKNOWN")
+            robot_names = get_robot_names()
+            robot_name = robot_names.get(mac_address, "UNKNOWN")
             tft.text((48, 100), robot_name, YELLOW, FONT, 1)
             return mac_address
         return prev_mac
