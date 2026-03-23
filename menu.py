@@ -30,7 +30,7 @@ def show(tft):
     MENU_X = 25
     CURSOR_X = 10
     START_Y = 40  # Lekko podciągnięte do góry, żeby zmieścić 4 opcje
-    SPACING = 19  # Nieco mniejszy odstęp dla lepszego balansu
+    SPACING = 15  # Nieco mniejszy odstęp dla lepszego balansu
 
     tft.fill(BLACK)
 
