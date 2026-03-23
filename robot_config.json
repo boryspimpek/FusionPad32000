@@ -1,6 +1,12 @@
 {
   "robots": {
-    "5c013b6c1c48": "OTTO NINJA",
-    "9888e0d1823c": "FALLOUT OTTO"
+    "5c013b6c1c48": {
+      "name": "OTTO NINJA",
+      "mac": "5c:01:3b:6c:1c:48"
+    },
+    "9888e0d1823c": {
+      "name": "FALLOUT OTTO", 
+      "mac": "98:88:e0:d1:82:3c"
+    }
   }
 }

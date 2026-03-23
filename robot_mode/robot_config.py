@@ -6,28 +6,61 @@ import os
 def load_config():
     """Load robot configuration from JSON file with fallback to hardcoded values"""
     try:
-        # Try to open the file directly with absolute path
+        # Try to open file directly with absolute path
         try:
             with open('/robot_config.json', 'r') as f:
                 config = ujson.load(f)
-                # Convert string MACs back to bytes and build ROBOT_NAMES
+                # Handle new format with MAC addresses stored separately
                 robot_names = {}
-                for mac_str, name in config.get('robots', {}).items():
-                    # Convert hex string back to bytes
-                    mac_bytes = bytes.fromhex(mac_str)
-                    robot_names[mac_bytes] = name
+                robot_macs = []
+                
+                if 'robots' in config:
+                    for mac_str, robot_data in config['robots'].items():
+                        # New format: {"5c013b6c1c48": {"name": "OTTO NINJA", "mac": "5c:01:3b:6c:1c:48"}}
+                        if isinstance(robot_data, dict) and 'name' in robot_data:
+                            mac_bytes = bytes.fromhex(mac_str)
+                            robot_names[mac_bytes] = robot_data['name']
+                            robot_macs.append(mac_bytes)
+                            print(f"Loaded robot: {mac_str} -> {robot_data['name']}")  # Debug
+                        # Old format: {"5c013b6c1c48": "OTTO NINJA"}
+                        elif isinstance(robot_data, str):
+                            mac_bytes = bytes.fromhex(mac_str)
+                            robot_names[mac_bytes] = robot_data
+                            robot_macs.append(mac_bytes)
+                            print(f"Loaded robot (old format): {mac_str} -> {robot_data}")  # Debug
+                
+                # Update RECEIVER_MACS dynamically
+                if robot_macs:
+                    global RECEIVER_MACS
+                    RECEIVER_MACS = robot_macs
+                
                 print(f"Loaded config from JSON: {robot_names}")  # Debug
                 return robot_names
         except OSError:
             # Try relative path as fallback
             with open('../robot_config.json', 'r') as f:
                 config = ujson.load(f)
-                # Convert string MACs back to bytes and build ROBOT_NAMES
+                # Same logic as above
                 robot_names = {}
-                for mac_str, name in config.get('robots', {}).items():
-                    # Convert hex string back to bytes
-                    mac_bytes = bytes.fromhex(mac_str)
-                    robot_names[mac_bytes] = name
+                robot_macs = []
+                
+                if 'robots' in config:
+                    for mac_str, robot_data in config['robots'].items():
+                        if isinstance(robot_data, dict) and 'name' in robot_data:
+                            mac_bytes = bytes.fromhex(mac_str)
+                            robot_names[mac_bytes] = robot_data['name']
+                            robot_macs.append(mac_bytes)
+                            print(f"Loaded robot: {mac_str} -> {robot_data['name']}")  # Debug
+                        elif isinstance(robot_data, str):
+                            mac_bytes = bytes.fromhex(mac_str)
+                            robot_names[mac_bytes] = robot_data
+                            robot_macs.append(mac_bytes)
+                            print(f"Loaded robot (old format): {mac_str} -> {robot_data}")  # Debug
+                
+                if robot_macs:
+                    global RECEIVER_MACS
+                    RECEIVER_MACS = robot_macs
+                
                 print(f"Loaded config from JSON (relative): {robot_names}")  # Debug
                 return robot_names
     except Exception as e:
@@ -42,16 +75,28 @@ def load_config():
     }
 
 def save_config(robot_names):
-    """Save robot configuration to JSON file"""
+    """Save robot configuration to JSON file with MAC addresses"""
     try:
         # Convert bytes MACs to hex strings for JSON serialization
         config_robots = {}
+        robot_macs = []
+        
         for mac_bytes, name in robot_names.items():
             mac_str = mac_bytes.hex()
-            config_robots[mac_str] = name
+            mac_formatted = ':'.join([mac_str[i:i+2] for i in range(0, len(mac_str), 2)])
+            config_robots[mac_str] = {
+                "name": name,
+                "mac": mac_formatted
+            }
+            robot_macs.append(mac_bytes)
         
         config = {'robots': config_robots}
-        # Use absolute path to ensure we save to the correct location
+        
+        # Update RECEIVER_MACS dynamically
+        global RECEIVER_MACS
+        RECEIVER_MACS = robot_macs
+        
+        # Use correct path - mode_config.py is in root directory
         with open('../robot_config.json', 'w') as f:
             ujson.dump(config, f)
         return True

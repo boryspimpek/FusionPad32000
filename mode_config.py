@@ -10,33 +10,48 @@ import glcdfont
 from robot_mode.robot_config import load_config, save_config
 
 # Import save_config directly and create a wrapper that fixes the path
-def save_config_fixed(robot_names):
-    """Save robot configuration to JSON file with correct path"""
+def save_config_fixed(robot_names, robots_data=None):
+    """Save robot configuration to JSON file with correct path and MAC addresses"""
     try:
         import ujson
         import os
         
+        print(f"save_config_fixed called with: {robot_names}")  # Debug
+        
         # Convert bytes MACs to hex strings for JSON serialization
         config_robots = {}
+        robot_macs = []
+        
         for mac_bytes, name in robot_names.items():
             mac_str = mac_bytes.hex()
-            config_robots[mac_str] = name
+            # Use the MAC address from the POST data, not reformatted
+            # Look for the MAC in the original robots_data
+            original_mac = ':'.join([mac_str[i:i+2] for i in range(0, len(mac_str), 2)])
+            if robots_data:
+                for mac_key, robot_info in robots_data.items():
+                    if mac_key == mac_str:
+                        original_mac = robot_info.get('mac', original_mac)
+                        break
+            
+            config_robots[mac_str] = {
+                "name": name,
+                "mac": original_mac
+            }
+            robot_macs.append(mac_bytes)
         
         config = {'robots': config_robots}
         
-        # Debug: check current directory and files
-        print(f"Current directory: {os.getcwd()}")
-        print(f"Files in current dir: {os.listdir()}")
+        print(f"About to write config: {config}")  # Debug
         
         # Use correct path - mode_config.py is in root directory
         with open('robot_config.json', 'w') as f:
             ujson.dump(config, f)
-            print(f"Written config: {config}")
+            print("File written successfully")  # Debug
         
         # Verify file was written
         with open('robot_config.json', 'r') as f:
             content = f.read()
-            print(f"File content after save: {content}")
+            print(f"File content after save: {content}")  # Debug
         
         return True
     except Exception as e:
@@ -67,33 +82,120 @@ def get_html_template():
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { color: #333; text-align: center; }
-        .robot-config { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .robot-config { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
         .robot-config h3 { margin-top: 0; color: #007bff; }
         .form-group { margin: 10px 0; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        input[type="text"].mac-input { font-family: monospace; }
+        input.valid { border-color: #28a745; }
+        input.invalid { border-color: #dc3545; background-color: #f8d7da; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px; }
         .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
         .message { padding: 10px; margin: 10px 0; border-radius: 4px; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .robot-actions { text-align: right; margin-top: 10px; }
+        .validation-error { color: #dc3545; font-size: 12px; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>FusionPad Robot Configuration</h1>
-        <form method="post">
-            <div id="robots-container">
-                <!-- Robot configurations will be inserted here -->
-            </div>
+        <div id="robots-container">
+            <!-- Robot configurations will be inserted here -->
+        </div>
+        <div class="robot-actions">
+            <button type="button" class="btn btn-success" onclick="addRobot()">Add New Robot</button>
+        </div>
+        <form id="configForm" style="display: none;">
             <button type="submit" class="btn">Save Configuration</button>
         </form>
         <div id="message"></div>
     </div>
 
     <script>
+        // MAC address validation
+        function validateMac(mac) {
+            // Accept formats: "5c:01:3b:6c:1c:48" or "5c013b6c1c48"
+            const cleanMac = mac.replace(/:/g, '').toLowerCase();
+            if (cleanMac.length !== 12) return false;
+            
+            // Check if all characters are valid hex
+            const hexRegex = /^[0-9a-f]+$/;
+            return hexRegex.test(cleanMac);
+        }
+
+        function formatMac(mac) {
+            const cleanMac = mac.replace(/:/g, '').toLowerCase();
+            if (cleanMac.length !== 12) return mac;
+            
+            // Format as 5c:01:3b:6c:1c:48
+            return cleanMac.match(/.{2}/g).join(':');
+        }
+
+        function validateMacInput(input) {
+            const mac = input.value;
+            if (validateMac(mac)) {
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+                input.value = formatMac(mac);
+                return true;
+            } else {
+                input.classList.remove('valid');
+                input.classList.add('invalid');
+                return false;
+            }
+        }
+
+        function addRobot() {
+            const container = document.getElementById('robots-container');
+            const robotCount = container.children.length;
+            
+            const robotDiv = document.createElement('div');
+            robotDiv.className = 'robot-config';
+            robotDiv.innerHTML = `
+                <h3>Robot ${robotCount + 1}</h3>
+                <div class="form-group">
+                    <label>MAC Address:</label>
+                    <input type="text" class="mac-input" name="mac_new_${robotCount}" 
+                           placeholder="5c:01:3b:6c:1c:48" 
+                           oninput="validateMacInput(this)">
+                    <div class="validation-error">Invalid MAC address format</div>
+                </div>
+                <div class="form-group">
+                    <label>Robot Name:</label>
+                    <input type="text" name="name_new_${robotCount}" placeholder="Enter robot name">
+                </div>
+                <div class="robot-actions">
+                    <button type="button" class="btn btn-danger" onclick="removeRobot(this)">Remove Robot</button>
+                </div>
+            `;
+            container.appendChild(robotDiv);
+        }
+
+        function removeRobot(button) {
+            if (confirm('Are you sure you want to remove this robot?')) {
+                button.closest('.robot-config').remove();
+                updateRobotNumbers();
+            }
+        }
+
+        function updateRobotNumbers() {
+            const container = document.getElementById('robots-container');
+            const robots = container.querySelectorAll('.robot-config');
+            robots.forEach((robot, index) => {
+                const h3 = robot.querySelector('h3');
+                if (h3) h3.textContent = `Robot ${index + 1}`;
+            });
+        }
+
         // Load current configuration
         fetch('/api/config')
             .then(response => response.json())
@@ -101,18 +203,26 @@ def get_html_template():
                 const container = document.getElementById('robots-container');
                 container.innerHTML = '';
                 
-                Object.entries(data.robots).forEach(([mac, name]) => {
+                Object.entries(data.robots).forEach(([mac, robotData], index) => {
+                    const name = typeof robotData === 'string' ? robotData : robotData.name;
+                    const macFormatted = typeof robotData === 'string' ? mac : robotData.mac;
+                    
                     const robotDiv = document.createElement('div');
                     robotDiv.className = 'robot-config';
                     robotDiv.innerHTML = `
-                        <h3>Robot Configuration</h3>
+                        <h3>Robot ${index + 1}</h3>
                         <div class="form-group">
                             <label>MAC Address:</label>
-                            <input type="text" name="mac_${mac}" value="${mac}" readonly>
+                            <input type="text" class="mac-input" name="mac_${mac}" value="${macFormatted}" 
+                                   oninput="validateMacInput(this)">
+                            <div class="validation-error">Invalid MAC address format</div>
                         </div>
                         <div class="form-group">
                             <label>Robot Name:</label>
                             <input type="text" name="name_${mac}" value="${name}" placeholder="Enter robot name">
+                        </div>
+                        <div class="robot-actions">
+                            <button type="button" class="btn btn-danger" onclick="removeRobot(this)">Remove Robot</button>
                         </div>
                     `;
                     container.appendChild(robotDiv);
@@ -123,7 +233,7 @@ def get_html_template():
             });
 
         // Handle form submission
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.getElementById('configForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData();
@@ -131,8 +241,15 @@ def get_html_template():
             
             // Collect robot data
             document.querySelectorAll('input[name^="name_"]').forEach(input => {
-                const mac = input.name.replace('name_', '');
-                robots[mac] = input.value;
+                const macKey = input.name.replace('name_', '');
+                const macInput = document.querySelector(`input[name="mac_${macKey}"]`);
+                
+                if (macInput && validateMacInput(macInput)) {
+                    robots[macKey] = {
+                        name: input.value,
+                        mac: macInput.value
+                    };
+                }
             });
             
             formData.append('robots', JSON.stringify(robots));
@@ -154,6 +271,11 @@ def get_html_template():
             .catch(error => {
                 document.getElementById('message').innerHTML = '<div class="error">Error saving configuration</div>';
             });
+        });
+
+        // Show save button when any input changes
+        document.addEventListener('input', function() {
+            document.getElementById('configForm').style.display = 'block';
         });
     </script>
 </body>
@@ -185,11 +307,19 @@ def handle_request(client_socket, config):
                     # Handle multipart form data - look for JSON content
                     json_start = body.find('{"')
                     if json_start != -1:
-                        # Find the end of JSON (look for closing brace)
-                        json_end = body.find('"}', json_start) + 2
-                        if json_end <= json_start:
-                            # Try alternative end detection
-                            json_end = body.find('\n', json_start)
+                        # Find the end of JSON properly - look for matching closing brace
+                        brace_count = 0
+                        json_end = json_start
+                        
+                        for i in range(json_start, len(body)):
+                            char = body[i]
+                            if char == '{':
+                                brace_count += 1
+                            elif char == '}':
+                                brace_count -= 1
+                                if brace_count == 0:
+                                    json_end = i + 1
+                                    break
                         
                         if json_end > json_start:
                             robots_json = body[json_start:json_end]
@@ -197,19 +327,42 @@ def handle_request(client_socket, config):
                             
                             robots_data = ujson.loads(robots_json)
                             
-                            # Convert to bytes format and save
+                            # Validate MAC addresses and convert to bytes format
                             robot_names = {}
-                            for mac_str, name in robots_data.items():
-                                mac_bytes = bytes.fromhex(mac_str)
-                                robot_names[mac_bytes] = name
+                            updated_robots_data = {}
+                            
+                            for mac_key, robot_info in robots_data.items():
+                                if isinstance(robot_info, dict) and 'name' in robot_info:
+                                    # New format with MAC address
+                                    mac_from_form = robot_info.get('mac', '').replace(':', '')
+                                    mac_bytes = bytes.fromhex(mac_from_form)
+                                    robot_names[mac_bytes] = robot_info['name']
+                                    # Update the key to match the MAC from form
+                                    updated_robots_data[mac_from_form] = robot_info
+                                elif isinstance(robot_info, str):
+                                    # Backward compatibility - old format
+                                    mac_bytes = bytes.fromhex(mac_key)
+                                    robot_names[mac_bytes] = robot_info
+                                    updated_robots_data[mac_key] = robot_info
                             
                             print(f"Saving robot names: {robot_names}")  # Debug
                             
-                            if save_config_fixed(robot_names):
+                            if save_config_fixed(robot_names, updated_robots_data):
+                                print("save_config_fixed called successfully!")  # Debug
                                 # Update the config variable with new data
                                 config['robots'] = {}
                                 for mac_bytes, name in robot_names.items():
-                                    config['robots'][mac_bytes.hex()] = name
+                                    mac_hex = mac_bytes.hex()
+                                    # Use the original MAC from updated_robots_data
+                                    original_mac = ':'.join([mac_hex[i:i+2] for i in range(0, len(mac_hex), 2)])
+                                    for mac_key, robot_info in updated_robots_data.items():
+                                        if mac_key == mac_hex:
+                                            original_mac = robot_info.get('mac', original_mac)
+                                            break
+                                    config['robots'][mac_hex] = {
+                                        'name': name,
+                                        'mac': original_mac
+                                    }
                                 
                                 response = ujson.dumps({"success": True})
                                 print("Save successful")  # Debug
