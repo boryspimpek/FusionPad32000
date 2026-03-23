@@ -20,12 +20,20 @@ class RobotInput:
     
     def check_exit_condition(self, btn_data, exit_timer):
         """Check exit condition (SW1 + SW2 for 2 seconds)"""
-        if btn_data.get('sw1') and btn_data.get('sw2'):
+        sw1_pressed = btn_data.get('sw1')
+        sw2_pressed = btn_data.get('sw2')
+        
+        if sw1_pressed and sw2_pressed:
             if exit_timer == 0:
                 return time.ticks_ms(), False
             elif time.ticks_diff(time.ticks_ms(), exit_timer) > EXIT_HOLD_TIME_MS:
                 return exit_timer, True
-        return 0, False
+            else:
+                # Keep the timer running, don't reset to 0
+                return exit_timer, False
+        else:
+            # Reset timer when buttons are not both pressed
+            return 0, False
     
     def handle_trim_selection(self, pot_value, prev_pot1, selected_servo):
         """Handle servo selection in trim mode"""
