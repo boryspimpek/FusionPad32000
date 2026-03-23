@@ -47,8 +47,8 @@ while True:
         import mode_rc
         mode_rc.run(tft)
     elif wybor == "Robot Controller":
-        import mode_robot
-        mode_robot.run(tft)
+        import robot_mode
+        robot_mode.run(tft)
     elif wybor == "Calibration": # <--- NOWA OPCJA
         import mode_calibration
         mode_calibration.run(tft, ads1, ads2)
