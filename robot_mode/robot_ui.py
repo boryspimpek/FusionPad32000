@@ -41,11 +41,21 @@ class RobotUI:
         tft.text((layout['COL_LEFT'], layout['MARGIN_TOP'] + 60), "ROBOT:", CYAN,    FONT, 1)
         tft.text((self.center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", RED, FONT, 1)
     
-    def draw_actions_screen(self, tft, screen_key):
+    def draw_actions_screen(self, tft, screen_key, current_mac=None):
         """Draw robot actions screen"""
         tft.fill(BLACK)
         actions = ROBOT_ACTIONS[screen_key]
-        self.draw_header(tft, actions['title'])
+        
+        # Create dynamic title based on current robot
+        if current_mac:
+            robot_name = ROBOT_NAMES.get(current_mac, "UNKNOWN ROBOT")
+            # Extract action number from original title (e.g., "OTTO ACTIONS 1" -> "1")
+            action_number = actions['title'].split()[-1]
+            dynamic_title = f"{robot_name} ACTIONS {action_number}"
+        else:
+            dynamic_title = actions['title']
+        
+        self.draw_header(tft, dynamic_title)
         
         layout = UI_LAYOUT
         
@@ -174,7 +184,7 @@ class RobotUI:
         if prev_mac != mac_address:
             tft.fillrect((layout['COL_LEFT'] + 30, layout['MARGIN_TOP'] + 60), (120, 8), BLACK)
             robot_name = ROBOT_NAMES.get(mac_address, "UNKNOWN")
-            tft.text((layout['COL_LEFT'] + 30, layout['MARGIN_TOP'] + 60), robot_name, YELLOW, FONT, 1)
+            tft.text((layout['COL_LEFT'] + 38, layout['MARGIN_TOP'] + 60), robot_name, YELLOW, FONT, 1)
             return mac_address
         return prev_mac
     

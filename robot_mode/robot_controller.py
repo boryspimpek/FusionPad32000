@@ -64,9 +64,9 @@ class RobotController:
                 if self.state['current_screen'] == MODE_MAIN:
                     self.ui.draw_main_screen(tft)
                 elif self.state['current_screen'] == MODE_SCREEN2:
-                    self.ui.draw_actions_screen(tft, 'screen2')
+                    self.ui.draw_actions_screen(tft, 'screen2', self.communication.get_current_mac())
                 elif self.state['current_screen'] == MODE_SCREEN3:
-                    self.ui.draw_actions_screen(tft, 'screen3')
+                    self.ui.draw_actions_screen(tft, 'screen3', self.communication.get_current_mac())
                 elif self.state['current_screen'] == MODE_TRIM:
                     self.ui.draw_trim_screen(tft)
 
