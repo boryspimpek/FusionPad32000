@@ -301,7 +301,7 @@ def run(tft):
     tft.text((center_x("WiFi: FusionPad-Config"), 30), "WiFi: FusionPad-Config", WHITE, FONT, 1)
     tft.text((center_x(f"IP: {ip}"), 50), f"IP: {ip}", WHITE, FONT, 1)
     tft.text((center_x("Connect to configure"), 70), "Connect to configure", GREEN, FONT, 1)
-    tft.text((center_x("Press button to exit"), 90), "Press button to exit", RED, FONT, 1)
+    tft.text((center_x("Press sw1 to exit"), 90), "Press sw1 to exit", RED, FONT, 1)
     
     print(f"Configuration mode active. Connect to WiFi: FusionPad-Config, IP: {ip}")
     
