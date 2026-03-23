@@ -49,12 +49,12 @@ UI_LAYOUT = {
 # === ROBOT ACTIONS CONFIGURATION ===
 ROBOT_ACTIONS = {
     'screen2': {
-        'title': "OTTO ACTIONS 1",
+        'title': "ACTIONS 1",
         'left': [" Forward L1", "    Back L2", "    Wave L3", "    Tilt L4"],
         'right': ["R1 Forward", "R2 Back", "R3 Arms", "R4 Steps"]
     },
     'screen3': {
-        'title': "OTTO ACTIONS 2", 
+        'title': "ACTIONS 2", 
         'left': [" Circles L1", "   Steps L2", "   Steps L3", "    Toes L4"],
         'right': ["R1 Spin", "R2 Boogie", "R3 Balerina", "R4 Weird"]
     }
