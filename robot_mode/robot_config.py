@@ -3,6 +3,51 @@ import ST7735 # type: ignore
 import ujson
 import os
 
+# === FONT CONFIGURATION ===
+FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": None}  # Will be set from glcdfont
+
+# === COLORS ===
+BLACK  = ST7735.TFT.BLACK
+WHITE  = ST7735.TFT.WHITE
+CYAN   = 0x07FF
+YELLOW = 0xFFE0
+GREEN  = 0x07E0
+RED    = 0xF800
+GRAY   = 0x4208
+
+# === SCREEN MODES ===
+MODE_MAIN    = 0  # ekran z joystickami
+MODE_SCREEN2 = 1  # pierwszy ekran akcji
+MODE_SCREEN3 = 2  # drugi ekran akcji
+MODE_TRIM    = 3  # ekran trimowania serw
+
+# === ROBOT ACTIONS CONFIGURATION ===
+ROBOT_ACTIONS = {
+    'screen2': {
+        'title': "ACTIONS 1",
+        'left': ["Forward", "Back", "Wave", "Tilt"],
+        'right': ["Forward", "Back", "Arms", "Steps"]
+    },
+    'screen3': {
+        'title': "ACTIONS 2", 
+        'left': ["Circles", "Steps", "Steps", "Toes"],
+        'right': ["Spin", "Boogie", "Balerina", "Weird"]
+    }
+}
+
+# === SERVO CONFIGURATION ===
+SERVO_NAMES = ["RF Right Foot: ", "RL Right Leg: ", "RA Right Arm: ", 
+               "LF Left Foot: ", "LL Left Leg: ", "LA Left Arm: "]
+
+# === COMMUNICATION ===
+PACKET_FORMAT = '4bBBH'
+UPDATE_RATE_MS = 5 
+EXIT_HOLD_TIME_MS = 2000
+
+# === RECEIVER MAC ADDRESSES ===
+# Will be populated from JSON config by load_config()
+RECEIVER_MACS = []
+
 def load_config():
     """Load robot configuration from JSON file with fallback to hardcoded values"""
     try:
@@ -123,58 +168,3 @@ def save_config_fixed(robot_names, robots_data=None):
         import sys
         print(f"Error type: {type(e)}")
         return False
-
-# === FONT CONFIGURATION ===
-FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": None}  # Will be set from glcdfont
-
-# === RECEIVER MAC ADDRESSES ===
-RECEIVER_MACS = [
-    b'\x5c\x01\x3b\x6c\x1c\x48',  # OTTO NINJA
-    b'\x98\x88\xe0\xd1\x82\x3c'   # FALLOUT OTTO
-]
-
-# === ROBOT NAMES ===
-def get_robot_names():
-    """Get current robot names from JSON or fallback"""
-    return load_config()
-
-# Keep ROBOT_NAMES for backward compatibility but make it dynamic
-ROBOT_NAMES = get_robot_names()
-
-# === COLORS ===
-BLACK  = ST7735.TFT.BLACK
-WHITE  = ST7735.TFT.WHITE
-CYAN   = 0x07FF
-YELLOW = 0xFFE0
-GREEN  = 0x07E0
-RED    = 0xF800
-GRAY   = 0x4208
-
-# === SCREEN MODES ===
-MODE_MAIN    = 0  # ekran z joystickami
-MODE_SCREEN2 = 1  # pierwszy ekran akcji
-MODE_SCREEN3 = 2  # drugi ekran akcji
-MODE_TRIM    = 3  # ekran trimowania serw
-
-# === ROBOT ACTIONS CONFIGURATION ===
-ROBOT_ACTIONS = {
-    'screen2': {
-        'title': "ACTIONS 1",
-        'left': ["Forward", "Back", "Wave", "Tilt"],
-        'right': ["Forward", "Back", "Arms", "Steps"]
-    },
-    'screen3': {
-        'title': "ACTIONS 2", 
-        'left': ["Circles", "Steps", "Steps", "Toes"],
-        'right': ["Spin", "Boogie", "Balerina", "Weird"]
-    }
-}
-
-# === SERVO CONFIGURATION ===
-SERVO_NAMES = ["RF Right Foot: ", "RL Right Leg: ", "RA Right Arm: ", 
-               "LF Left Foot: ", "LL Left Leg: ", "LA Left Arm: "]
-
-# === COMMUNICATION ===
-PACKET_FORMAT = '4bBBH'
-UPDATE_RATE_MS = 5 
-EXIT_HOLD_TIME_MS = 2000
