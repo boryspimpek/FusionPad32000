@@ -124,36 +124,6 @@ def save_config_fixed(robot_names, robots_data=None):
         print(f"Error type: {type(e)}")
         return False
 
-def save_config(robot_names):
-    """Save robot configuration to JSON file with MAC addresses"""
-    try:
-        # Convert bytes MACs to hex strings for JSON serialization
-        config_robots = {}
-        robot_macs = []
-        
-        for mac_bytes, name in robot_names.items():
-            mac_str = mac_bytes.hex()
-            mac_formatted = ':'.join([mac_str[i:i+2] for i in range(0, len(mac_str), 2)])
-            config_robots[mac_str] = {
-                "name": name,
-                "mac": mac_formatted
-            }
-            robot_macs.append(mac_bytes)
-        
-        config = {'robots': config_robots}
-        
-        # Update RECEIVER_MACS dynamically
-        global RECEIVER_MACS
-        RECEIVER_MACS = robot_macs
-        
-        # Use correct path - mode_config.py is in root directory
-        with open('../robot_config.json', 'w') as f:
-            ujson.dump(config, f)
-        return True
-    except Exception as e:
-        print(f"Save error: {e}")  # Debug
-        return False
-
 # === FONT CONFIGURATION ===
 FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": None}  # Will be set from glcdfont
 

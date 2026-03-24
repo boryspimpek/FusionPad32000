@@ -29,12 +29,6 @@ def display_connection_info(tft, ip):
     tft.text((center_x("Connect to configure"), 70), "Connect to configure", GREEN, FONT, 1)
     tft.text((center_x("Press sw1 to exit"), 90), "Press sw1 to exit", RED, FONT, 1)
 
-def display_exiting(tft):
-    """Display exiting message"""
-    tft.fill(BLACK)
-    tft.text((center_x("Exiting Config"), 40), "Exiting Config", WHITE, FONT, 1)
-    time.sleep(1)
-
 def run(tft):
     """Run configuration mode with WiFi AP and web server"""
     # Initialize WiFi AP
@@ -80,4 +74,6 @@ def run(tft):
         pass
     
     cleanup_wifi(ap)
-    display_exiting(tft)
+    tft.fill(BLACK)
+    tft.text((center_x("Exiting Config"), 40), "Exiting Config", WHITE, FONT, 1)
+    time.sleep(1)
