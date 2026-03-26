@@ -38,9 +38,15 @@ def run(tft):
     # Load current configuration
     config = {'robots': {}}
     try:
-        robot_names = load_config()
+        robot_names, robot_macs = load_config()
         for mac_bytes, name in robot_names.items():
-            config['robots'][mac_bytes.hex()] = name
+            mac_hex = mac_bytes.hex()
+            # Format MAC address with colons for display
+            mac_display = ':'.join([mac_hex[i:i+2] for i in range(0, len(mac_hex), 2)])
+            config['robots'][mac_hex] = {
+                'name': name,
+                'mac': mac_display
+            }
     except:
         pass
     
