@@ -147,3 +147,9 @@ class RobotController:
         self.ui.show_cleanup_message(tft)
         self.input_handler.wait_for_button_release()
         self.communication.cleanup()
+
+
+def run(tft):
+    """Module-level run function for compatibility with main.py"""
+    controller = RobotController()
+    controller.run(tft)

@@ -17,7 +17,7 @@ def center_x(text, screen_w=160, char_w=6):
     return (screen_w - len(text) * char_w) // 2
 
 def show(tft):
-    opcje = ["PC Gamepad", "RC Transmitter", "Robot Controller", "Configuration", "Calibration", "Raw ADC"]
+    opcje = ["PC Gamepad", "RC Transmitter", "Robot", "Configuration", "Calibration", "Raw ADC"]
     ilosc = len(opcje)
     wybrany = -1
 
