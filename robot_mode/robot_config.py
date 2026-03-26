@@ -80,7 +80,7 @@ def load_config():
                     RECEIVER_MACS = robot_macs
                 
                 print(f"Loaded config from JSON: {robot_names}")  # Debug
-                return robot_names
+                return robot_names, robot_macs
         except OSError:
             # Try relative path as fallback
             with open('../robot_config.json', 'r') as f:
@@ -107,17 +107,19 @@ def load_config():
                     RECEIVER_MACS = robot_macs
                 
                 print(f"Loaded config from JSON (relative): {robot_names}")  # Debug
-                return robot_names
+                return robot_names, robot_macs
     except Exception as e:
         print(f"Load error: {e}")  # Debug
         pass
     
     # Fallback to hardcoded values
     print("Using hardcoded config")  # Debug
-    return {
+    robot_names = {
         b'\x5c\x01\x3b\x6c\x1c\x48': "OTTO NINJA",
         b'\x98\x88\xe0\xd1\x82\x3c': "FALLOUT OTTO"
     }
+    robot_macs = [b'\x5c\x01\x3b\x6c\x1c\x48', b'\x98\x88\xe0\xd1\x82\x3c']
+    return robot_names, robot_macs
 
 def save_config_fixed(robot_names, robots_data=None):
     """Save robot configuration to JSON file with correct path and MAC addresses"""

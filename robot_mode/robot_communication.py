@@ -2,16 +2,21 @@
 import network # type: ignore
 import espnow # type: ignore
 import struct
-from .robot_config import RECEIVER_MACS
+from .robot_config import load_config
 
 class RobotCommunication:
     def __init__(self):
         self.sta = None
         self.esp = None
         self.current_mac_index = 0
+        self.receiver_macs = []
     
     def initialize_network(self):
         """Initialize WiFi network and ESP-NOW"""
+        # Load configuration to get MAC addresses
+        robot_names, robot_macs = load_config()
+        self.receiver_macs = robot_macs
+        
         self.sta = network.WLAN(network.STA_IF)
         self.sta.active(True)
         
@@ -30,17 +35,26 @@ class RobotCommunication:
     
     def set_current_mac_index(self, index):
         """Set current MAC address index"""
+        if not self.receiver_macs:
+            print("Warning: No receiver MAC addresses configured")
+            return False
+        
         self.current_mac_index = index
-        return self.add_peer(RECEIVER_MACS[index])
+        return self.add_peer(self.receiver_macs[index])
     
     def get_current_mac(self):
         """Get current MAC address"""
-        return RECEIVER_MACS[self.current_mac_index]
+        if not self.receiver_macs:
+            return None
+        return self.receiver_macs[self.current_mac_index]
     
     def switch_mac_address(self, btn_data, prev_btn_data):
         """Switch MAC address when SW2 is pressed (but not when SW1 is pressed)"""
+        if not self.receiver_macs:
+            return self.current_mac_index
+            
         if btn_data.get('sw2') and not prev_btn_data.get('sw2', False) and not btn_data.get('sw1'):
-            new_index = (self.current_mac_index + 1) % len(RECEIVER_MACS)
+            new_index = (self.current_mac_index + 1) % len(self.receiver_macs)
             self.set_current_mac_index(new_index)
             return new_index  # Return new index
         return self.current_mac_index  # Return current index
