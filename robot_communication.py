@@ -1,8 +1,8 @@
-# robot_communication.py - Network layer for robot controller
+# robot_communication.py - ESP-NOW communication for robot controller
 import network # type: ignore
 import espnow # type: ignore
 import struct
-from .robot_config import load_config
+import robot_config
 
 class RobotCommunication:
     def __init__(self):
@@ -14,7 +14,7 @@ class RobotCommunication:
     def initialize_network(self):
         """Initialize WiFi network and ESP-NOW"""
         # Load configuration to get MAC addresses
-        robot_names, robot_macs = load_config()
+        robot_names, robot_macs = robot_config.load_config()
         self.receiver_macs = robot_macs
         
         self.sta = network.WLAN(network.STA_IF)

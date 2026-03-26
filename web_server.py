@@ -2,8 +2,8 @@
 import socket
 import ujson
 import time
-from .html_template import get_html_template
-from ..robot_config import save_config_fixed
+import html_template
+import robot_config
 
 def handle_request(client_socket, config):
     """Handle HTTP requests"""
@@ -71,7 +71,7 @@ def handle_request(client_socket, config):
                             
                             print(f"Saving robot names: {robot_names}")  # Debug
                             
-                            if save_config_fixed(robot_names, updated_robots_data):
+                            if robot_config.save_config_fixed(robot_names, updated_robots_data):
                                 print("save_config_fixed called successfully!")  # Debug
                                 # Update the config variable with new data
                                 config['robots'] = {}
@@ -118,7 +118,7 @@ def handle_request(client_socket, config):
                 
         else:
             # Serve HTML page
-            html = get_html_template()
+            html = html_template.get_html_template()
             client_socket.send('HTTP/1.1 200 OK\n')
             client_socket.send('Content-Type: text/html\n')
             client_socket.send(f'Content-Length: {len(html)}\n\n')

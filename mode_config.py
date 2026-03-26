@@ -4,8 +4,9 @@ import machine # type: ignore
 import buttons
 import ST7735 # type: ignore
 import glcdfont
-from robot_mode.robot_config import load_config
-from robot_mode.web_config import setup_wifi_ap, cleanup_wifi, get_connection_info, setup_server_socket, check_client_connections
+from robot_config import load_config
+from wifi_manager import setup_wifi_ap, cleanup_wifi, get_connection_info
+from web_server import handle_request, setup_server_socket, check_client_connections
 
 # Font configuration
 FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}

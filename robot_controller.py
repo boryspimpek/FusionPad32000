@@ -1,17 +1,17 @@
-# robot_controller.py - Main controller class for robot mode
+# robot_controller.py - Main robot controller class
 import time
 import joystick
 import buttons
-from .robot_config import UPDATE_RATE_MS, EXIT_HOLD_TIME_MS, MODE_MAIN, MODE_SCREEN2, MODE_SCREEN3, MODE_TRIM
-from .robot_ui import RobotUI
-from .robot_communication import RobotCommunication
-from .robot_input import RobotInput
+import robot_config
+import robot_ui
+import robot_communication
+import robot_input
 
 class RobotController:
     def __init__(self):
-        self.ui = RobotUI()
-        self.communication = RobotCommunication()
-        self.input_handler = RobotInput()
+        self.ui = robot_ui.RobotUI()
+        self.communication = robot_communication.RobotCommunication()
+        self.input_handler = robot_input.RobotInput()
         
         # Application state
         self.state = {
@@ -61,24 +61,24 @@ class RobotController:
                 self.state['current_screen'] = new_screen
                 self.state['prev_values'].clear()
                 
-                if self.state['current_screen'] == MODE_MAIN:
+                if self.state['current_screen'] == robot_config.MODE_MAIN:
                     self.ui.draw_main_screen(tft)
-                elif self.state['current_screen'] == MODE_SCREEN2:
+                elif self.state['current_screen'] == robot_config.MODE_SCREEN2:
                     self.ui.draw_actions_screen(tft, 'screen2', self.communication.get_current_mac())
-                elif self.state['current_screen'] == MODE_SCREEN3:
+                elif self.state['current_screen'] == robot_config.MODE_SCREEN3:
                     self.ui.draw_actions_screen(tft, 'screen3', self.communication.get_current_mac())
-                elif self.state['current_screen'] == MODE_TRIM:
+                elif self.state['current_screen'] == robot_config.MODE_TRIM:
                     self.ui.draw_trim_screen(tft)
 
             # 5. UI UPDATE AND TRIM HANDLING
-            if self.state['current_screen'] == MODE_MAIN:
+            if self.state['current_screen'] == robot_config.MODE_MAIN:
                 self._update_main_screen(tft, joy_data, pot_data, btn_data)
 
-            elif self.state['current_screen'] == MODE_TRIM:
+            elif self.state['current_screen'] == robot_config.MODE_TRIM:
                 self._update_trim_screen(tft, pot_data, btn_data)
 
             # 6. SEND CONTROL DATA (only outside TRIM mode)
-            if self.state['current_screen'] != MODE_TRIM:
+            if self.state['current_screen'] != robot_config.MODE_TRIM:
                 self.communication.send_control_data(
                     joy_data, 
                     pot_data.get('pot1', 0), 
@@ -91,7 +91,7 @@ class RobotController:
             for key in btn_data:
                 self.state['prev_btn_data'][key] = btn_data[key]
 
-            time.sleep_ms(UPDATE_RATE_MS)
+            time.sleep_ms(robot_config.UPDATE_RATE_MS)
 
         # AFTER LOOP EXIT
         self._cleanup(tft)

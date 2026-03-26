@@ -47,8 +47,8 @@ while True:
         import mode_rc
         mode_rc.run(tft)
     elif wybor == "Robot Controller":
-        import robot_mode
-        robot_mode.run(tft)
+        import robot_controller
+        robot_controller.run(tft)
     elif wybor == "Configuration":
         import mode_config
         mode_config.run(tft)

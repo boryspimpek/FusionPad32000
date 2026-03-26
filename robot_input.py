@@ -1,6 +1,6 @@
 # robot_input.py - Input handling for robot controller
 import time
-from .robot_config import MODE_MAIN, MODE_SCREEN2, MODE_SCREEN3, MODE_TRIM, EXIT_HOLD_TIME_MS
+import robot_config
 
 class RobotInput:
     def __init__(self):
@@ -10,13 +10,13 @@ class RobotInput:
         """Select screen mode based on potentiometer value"""
         # Extend range to 4 modes: 0-25=MAIN, 26-50=SCREEN2, 51-75=SCREEN3, 76-100=TRIM
         if pot_value <= 25:
-            return MODE_MAIN
+            return robot_config.MODE_MAIN
         elif pot_value <= 50:
-            return MODE_SCREEN2
+            return robot_config.MODE_SCREEN2
         elif pot_value <= 75:
-            return MODE_SCREEN3
+            return robot_config.MODE_SCREEN3
         else:
-            return MODE_TRIM
+            return robot_config.MODE_TRIM
     
     def check_exit_condition(self, btn_data, exit_timer):
         """Check exit condition (SW1 + SW2 for 2 seconds)"""
@@ -26,7 +26,7 @@ class RobotInput:
         if sw1_pressed and sw2_pressed:
             if exit_timer == 0:
                 return time.ticks_ms(), False
-            elif time.ticks_diff(time.ticks_ms(), exit_timer) > EXIT_HOLD_TIME_MS:
+            if exit_timer and (time.ticks_ms() - exit_timer) >= robot_config.EXIT_HOLD_TIME_MS:
                 return exit_timer, True
             else:
                 # Keep the timer running, don't reset to 0
