@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robot Config Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --panel: #0f1318;
+      --border: #1f2d3d;
+      --accent: #00e5ff;
+      --accent2: #ff4081;
+      --text: #c8d6e5;
+      --muted: #4a5568;
+      --green: #00ff9f;
+      --row-bg: #12181f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 16px 60px;
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(0,229,255,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(255,64,129,0.04) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.015) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.015) 40px);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(0,229,255,0.4);
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 720px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 28px 24px;
+      animation: fadeUp 0.5s ease both 0.1s;
+      position: relative;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .section-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    #robots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .robot-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: var(--row-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 14px;
+      animation: fadeIn 0.3s ease both;
+      transition: border-color 0.2s;
+    }
+
+    .robot-row:hover {
+      border-color: var(--muted);
+    }
+
+    .actions-section {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .action-screen {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px;
+    }
+
+    .action-screen h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .action-column h5 {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .action-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .action-input:focus {
+      border-color: var(--accent);
+    }
+
+    .servo-section {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .servo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .servo-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .servo-input:focus {
+      border-color: var(--accent);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .input-group label {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .input-group input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      padding: 7px 10px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,229,255,0.08);
+    }
+
+    .input-group input.error {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 2px rgba(255,64,129,0.1);
+    }
+
+    .btn-remove {
+      background: none;
+      border: 1px solid #2a1520;
+      color: var(--accent2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 1px;
+    }
+
+    .btn-remove:hover {
+      background: rgba(255,64,129,0.1);
+      border-color: var(--accent2);
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      padding: 10px 22px;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .btn-add {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn-add:hover {
+      background: rgba(0,229,255,0.08);
+      box-shadow: 0 0 12px rgba(0,229,255,0.2);
+    }
+
+    .btn-generate {
+      background: var(--accent);
+      color: #000;
+      margin-left: auto;
+    }
+    .btn-generate:hover {
+      background: #33eaff;
+      box-shadow: 0 0 16px rgba(0,229,255,0.4);
+    }
+    .btn-generate:active {
+      transform: scale(0.97);
+    }
+
+    /* Output */
+    .output-panel {
+      width: 100%;
+      max-width: 720px;
+      margin-top: 20px;
+      display: none;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .output-panel.visible { display: block; }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .output-header span {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--green);
+    }
+
+    .btn-download {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 7px 16px;
+      border-radius: 2px;
+      border: 1px solid var(--green);
+      color: var(--green);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-download:hover {
+      background: rgba(0,255,159,0.1);
+      box-shadow: 0 0 12px rgba(0,255,159,0.2);
+    }
+
+    pre#json-output {
+      background: var(--row-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      padding: 18px 20px;
+      border-radius: 3px;
+      overflow-x: auto;
+      line-height: 1.6;
+      white-space: pre;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent2);
+      color: #fff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      padding: 10px 20px;
+      border-radius: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 99;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes fadeDown {
+      from { opacity:0; transform: translateY(-16px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(16px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity:0; } to { opacity:1; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ ROBOT CONFIG EDITOR</h1>
+  <p>MANAGE ROBOT NAMES AND MAC ADDRESSES</p>
+</header>
+
+<div class="panel">
+  <div class="section-label">ROBOTS</div>
+  <div id="robots-list"></div>
+  <div class="actions-row">
+    <button class="btn btn-add" onclick="addRobot()">+ ADD ROBOT</button>
+    <button class="btn btn-generate" onclick="generate()">GENERATE JSON ▶</button>
+  </div>
+</div>
+
+<div class="output-panel" id="output-panel">
+  <div class="output-header">
+    <span>// OUTPUT — robot_config.json</span>
+    <button class="btn-download" onclick="downloadJSON()">⬇ DOWNLOAD JSON</button>
+  </div>
+  <pre id="json-output"></pre>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const initialData = {
+    "5c013b6c1c48": { name: "OTTO NINJA",    mac: "5c:01:3b:6c:1c:48" },
+    "9888e0d1823c": { name: "FALLOUT OTTO",  mac: "98:88:e0:d1:82:3c" }
+  };
+
+  function macToKey(mac) {
+    return mac.replace(/:/g, '').toLowerCase();
+  }
+
+  function addRobot(name = '', mac = '') {
+    const list = document.getElementById('robots-list');
+    const row = document.createElement('div');
+    row.className = 'robot-row';
+    row.innerHTML = `
+      <div class="input-group">
+        <label>Robot name</label>
+        <input type="text" placeholder="e.g. OTTO NINJA" value="${name}" class="name-input" />
+      </div>
+      <div class="input-group">
+        <label>MAC address</label>
+        <input type="text" placeholder="e.g. 5c:01:3b:6c:1c:48" value="${mac}" class="mac-input" />
+      </div>
+      <button class="btn-remove" title="Remove" onclick="this.closest('.robot-row').remove()">✕</button>
+      <div class="actions-section">
+        <div class="section-label">ROBOT ACTIONS</div>
+        <div class="actions-grid">
+          <div class="action-screen">
+            <h4>Screen 2</h4>
+            <div class="input-group">
+              <input type="text" placeholder="e.g. ACTIONS 1" class="screen2-title" value="ACTIONS 1" />
+            </div>
+            <div class="action-buttons">
+              <div class="action-column">
+                <h5>Left</h5>
+                <input type="text" class="action-input screen2-left" placeholder="Action 1" value="Forward" />
+                <input type="text" class="action-input screen2-left" placeholder="Action 2" value="Back" />
+                <input type="text" class="action-input screen2-left" placeholder="Action 3" value="Wave" />
+                <input type="text" class="action-input screen2-left" placeholder="Action 4" value="Tilt" />
+              </div>
+              <div class="action-column">
+                <h5>Right</h5>
+                <input type="text" class="action-input screen2-right" placeholder="Action 1" value="Forward" />
+                <input type="text" class="action-input screen2-right" placeholder="Action 2" value="Back" />
+                <input type="text" class="action-input screen2-right" placeholder="Action 3" value="Arms" />
+                <input type="text" class="action-input screen2-right" placeholder="Action 4" value="Steps" />
+              </div>
+            </div>
+          </div>
+          <div class="action-screen">
+            <h4>Screen 3</h4>
+            <div class="input-group">
+              <input type="text" placeholder="e.g. ACTIONS 2" class="screen3-title" value="ACTIONS 2" />
+            </div>
+            <div class="action-buttons">
+              <div class="action-column">
+                <h5>Left</h5>
+                <input type="text" class="action-input screen3-left" placeholder="Action 1" value="Circles" />
+                <input type="text" class="action-input screen3-left" placeholder="Action 2" value="Steps" />
+                <input type="text" class="action-input screen3-left" placeholder="Action 3" value="Steps" />
+                <input type="text" class="action-input screen3-left" placeholder="Action 4" value="Toes" />
+              </div>
+              <div class="action-column">
+                <h5>Right</h5>
+                <input type="text" class="action-input screen3-right" placeholder="Action 1" value="Spin" />
+                <input type="text" class="action-input screen3-right" placeholder="Action 2" value="Boogie" />
+                <input type="text" class="action-input screen3-right" placeholder="Action 3" value="Balerina" />
+                <input type="text" class="action-input screen3-right" placeholder="Action 4" value="Weird" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="servo-section">
+        <div class="section-label">SERVO CONFIGURATION</div>
+        <div class="servo-grid">
+          <div class="input-group">
+            <label>CH1</label>
+            <input type="text" class="servo-input servo-name" placeholder="Right foot servo name" value="RF Right Foot: " data-servo="0" />
+          </div>
+          <div class="input-group">
+            <label>CH2</label>
+            <input type="text" class="servo-input servo-name" placeholder="Right leg servo name" value="RL Right Leg: " data-servo="1" />
+          </div>
+          <div class="input-group">
+            <label>CH3</label>
+            <input type="text" class="servo-input servo-name" placeholder="Right arm servo name" value="RA Right Arm: " data-servo="2" />
+          </div>
+          <div class="input-group">
+            <label>CH4</label>
+            <input type="text" class="servo-input servo-name" placeholder="Left foot servo name" value="LF Left Foot: " data-servo="3" />
+          </div>
+          <div class="input-group">
+            <label>CH5</label>
+            <input type="text" class="servo-input servo-name" placeholder="Left leg servo name" value="LL Left Leg: " data-servo="4" />
+          </div>
+          <div class="input-group">
+            <label>CH6</label>
+            <input type="text" class="servo-input servo-name" placeholder="Left arm servo name" value="LA Left Arm: " data-servo="5" />
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  function validateMAC(mac) {
+    return /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/.test(mac.trim());
+  }
+
+  function generate() {
+    const rows = document.querySelectorAll('.robot-row');
+    let valid = true;
+    const robots = {};
+
+    rows.forEach(row => {
+      const nameInput = row.querySelector('.name-input');
+      const macInput  = row.querySelector('.mac-input');
+      const name = nameInput.value.trim();
+      const mac  = macInput.value.trim();
+
+      nameInput.classList.remove('error');
+      macInput.classList.remove('error');
+
+      if (!name) { nameInput.classList.add('error'); valid = false; }
+      if (!validateMAC(mac)) { macInput.classList.add('error'); valid = false; }
+
+      if (name && validateMAC(mac)) {
+        const key = macToKey(mac);
+        
+        // Get action data
+        const screen2Title = row.querySelector('.screen2-title').value.trim() || 'ACTIONS 1';
+        const screen3Title = row.querySelector('.screen3-title').value.trim() || 'ACTIONS 2';
+        
+        const screen2Left = Array.from(row.querySelectorAll('.screen2-left')).map(input => input.value.trim()).filter(v => v);
+        const screen2Right = Array.from(row.querySelectorAll('.screen2-right')).map(input => input.value.trim()).filter(v => v);
+        const screen3Left = Array.from(row.querySelectorAll('.screen3-left')).map(input => input.value.trim()).filter(v => v);
+        const screen3Right = Array.from(row.querySelectorAll('.screen3-right')).map(input => input.value.trim()).filter(v => v);
+        
+        // Get servo configuration
+        const servoNames = Array.from(row.querySelectorAll('.servo-name'))
+          .sort((a, b) => parseInt(a.dataset.servo) - parseInt(b.dataset.servo))
+          .map(input => input.value.trim())
+          .filter(v => v);
+        
+        robots[key] = { 
+          name, 
+          mac,
+          robot_actions: {
+            screen2: {
+              title: screen2Title,
+              left: screen2Left,
+              right: screen2Right
+            },
+            screen3: {
+              title: screen3Title,
+              left: screen3Left,
+              right: screen3Right
+            }
+          },
+          servo_names: servoNames.length > 0 ? servoNames : [
+            "RF Right Foot: ",
+            "RL Right Leg: ", 
+            "RA Right Arm: ",
+            "LF Left Foot: ",
+            "LL Left Leg: ",
+            "LA Left Arm: "
+          ]
+        };
+      }
+    });
+
+    if (!valid) {
+      showToast('⚠ Please correct errors in the form');
+      return;
+    }
+
+    if (Object.keys(robots).length === 0) {
+      showToast('⚠ Add at least one robot');
+      return;
+    }
+
+    const output = { robots };
+    document.getElementById('json-output').textContent = JSON.stringify(output, null, 2);
+    const panel = document.getElementById('output-panel');
+    panel.classList.add('visible');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function downloadJSON() {
+    const text = document.getElementById('json-output').textContent;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'robot_config.json';
+    a.click();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // Load initial data
+  Object.values(initialData).forEach(r => addRobot(r.name, r.mac));
+</script>
+</body>
+</html>
