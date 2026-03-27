@@ -4,9 +4,8 @@ import machine # type: ignore
 import buttons
 import ST7735 # type: ignore
 import glcdfont
-from robot_config import load_config
 from wifi_manager import setup_wifi_ap, cleanup_wifi, get_connection_info
-from web_server import handle_request, setup_server_socket, check_client_connections
+from web_server import setup_server_socket, check_client_connections
 
 # Font configuration
 FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}
@@ -35,22 +34,7 @@ def run(tft):
     # Initialize WiFi AP
     ap, ip = setup_wifi_ap()
     conn_info = get_connection_info(ip)
-    
-    # Load current configuration
-    config = {'robots': {}}
-    try:
-        robot_names, robot_macs = load_config()
-        for mac_bytes, name in robot_names.items():
-            mac_hex = mac_bytes.hex()
-            # Format MAC address with colons for display
-            mac_display = ':'.join([mac_hex[i:i+2] for i in range(0, len(mac_hex), 2)])
-            config['robots'][mac_hex] = {
-                'name': name,
-                'mac': mac_display
-            }
-    except:
-        pass
-    
+
     # Setup server socket
     server_socket = setup_server_socket()
     
@@ -70,7 +54,7 @@ def run(tft):
             break
         
         # Check for client connections (non-blocking)
-        last_client_check = check_client_connections(server_socket, config, last_client_check)
+        last_client_check = check_client_connections(server_socket, last_client_check)
         
         time.sleep(0.01)
     
