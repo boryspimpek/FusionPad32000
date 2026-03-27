@@ -1,33 +1,22 @@
 # mode_config.py - WiFi Configuration Mode with Web Interface (Refactored)
 import time
-import machine # type: ignore
 import buttons
 import ST7735 # type: ignore
-import glcdfont
+from glcdfont import FONT
 from wifi_manager import setup_wifi_ap, cleanup_wifi, get_connection_info
 from web_server import setup_server_socket, check_client_connections
-
-# Font configuration
-FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": glcdfont.font}
-
-# Colors
-BLACK = ST7735.TFT.BLACK
-WHITE = ST7735.TFT.WHITE
-CYAN = ST7735.TFT.CYAN
-GREEN = ST7735.TFT.GREEN
-RED = ST7735.TFT.RED
 
 def center_x(text, screen_w=160, char_w=6):
     return (screen_w - len(text) * char_w) // 2
 
 def display_connection_info(tft, ip):
     """Display WiFi connection information on TFT"""
-    tft.fill(BLACK)
-    tft.text((center_x("CONFIG MODE"), 10), "CONFIG MODE", CYAN, FONT, 1)
-    tft.text((center_x("WiFi: FusionPad-Config"), 30), "WiFi: FusionPad-Config", WHITE, FONT, 1)
-    tft.text((center_x(f"IP: {ip}"), 50), f"IP: {ip}", WHITE, FONT, 1)
-    tft.text((center_x("Connect to configure"), 70), "Connect to configure", GREEN, FONT, 1)
-    tft.text((center_x("Press sw1 to exit"), 90), "Press sw1 to exit", RED, FONT, 1)
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((center_x("CONFIG MODE"), 10), "CONFIG MODE", ST7735.TFT.CYAN, FONT, 1)
+    tft.text((center_x("WiFi: FusionPad-Config"), 30), "WiFi: FusionPad-Config", ST7735.TFT.WHITE, FONT, 1)
+    tft.text((center_x(f"IP: {ip}"), 50), f"IP: {ip}", ST7735.TFT.WHITE, FONT, 1)
+    tft.text((center_x("Connect to configure"), 70), "Connect to configure", ST7735.TFT.GREEN, FONT, 1)
+    tft.text((center_x("Press sw1 to exit"), 90), "Press sw1 to exit", ST7735.TFT.RED, FONT, 1)
 
 def run(tft):
     """Run configuration mode with WiFi AP and web server"""
@@ -65,6 +54,6 @@ def run(tft):
         pass
     
     cleanup_wifi(ap)
-    tft.fill(BLACK)
-    tft.text((center_x("Exiting Config"), 40), "Exiting Config", WHITE, FONT, 1)
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((center_x("Exiting Config"), 40), "Exiting Config", ST7735.TFT.WHITE, FONT, 1)
     time.sleep(1)

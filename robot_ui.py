@@ -1,9 +1,7 @@
 # robot_ui.py - UI Management for robot controller
-import glcdfont
+from glcdfont import FONT
 import robot_config
-
-# Initialize font with glcdfont data
-robot_config.FONT["Data"] = glcdfont.font
+import ST7735
 
 def init_ui():
     """Initialize UI module - font is already initialized at module level"""
@@ -24,28 +22,28 @@ def center_x(text, screen_w=160, char_w=6):
     
 def draw_header(tft, title):
     """Draw screen header"""
-    tft.rect((5, 5), (150, 25), robot_config.CYAN)
-    tft.text((center_x(title), 13), title, robot_config.YELLOW, robot_config.FONT, 1)
+    tft.rect((5, 5), (150, 25), ST7735.TFT.CYAN)
+    tft.text((center_x(title), 13), title, ST7735.TFT.YELLOW, FONT, 1)
     
 def draw_main_screen(tft):
     """Draw main screen with joysticks"""
-    tft.fill(robot_config.BLACK)
+    tft.fill(ST7735.TFT.BLACK)
     draw_header(tft, "OTTO GAMEPAD")
     
     row_height = 12
-    tft.text((10, 40 +  0), "J1X:", robot_config.CYAN,   robot_config.FONT, 1)
-    tft.text((90, 40 +  0), "J2X:", robot_config.CYAN,   robot_config.FONT, 1)
-    tft.text((10, 40 + row_height), "J1Y:", robot_config.CYAN,   robot_config.FONT, 1)
-    tft.text((90, 40 + row_height), "J2Y:", robot_config.CYAN,   robot_config.FONT, 1)
-    tft.text((10, 40 + 2 * row_height), "POT:", robot_config.CYAN,   robot_config.FONT, 1)
-    tft.text((10, 40 + 3 * row_height), "BT:",  robot_config.CYAN,  robot_config.FONT, 1)
-    tft.text((10, 40 + 4 * row_height), "SW:",  robot_config.CYAN,  robot_config.FONT, 1)
-    tft.text((10, 40 + 5 * row_height), "ROBOT:", robot_config.CYAN,    robot_config.FONT, 1)
-    tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", robot_config.RED, robot_config.FONT, 1)
+    tft.text((10, 40 +  0), "J1X:", ST7735.TFT.CYAN,   FONT, 1)
+    tft.text((90, 40 +  0), "J2X:", ST7735.TFT.CYAN,   FONT, 1)
+    tft.text((10, 40 + row_height), "J1Y:", ST7735.TFT.CYAN,   FONT, 1)
+    tft.text((90, 40 + row_height), "J2Y:", ST7735.TFT.CYAN,   FONT, 1)
+    tft.text((10, 40 + 2 * row_height), "POT:", ST7735.TFT.CYAN,   FONT, 1)
+    tft.text((10, 40 + 3 * row_height), "BT:",  ST7735.TFT.CYAN,  FONT, 1)
+    tft.text((10, 40 + 4 * row_height), "SW:",  ST7735.TFT.CYAN,  FONT, 1)
+    tft.text((10, 40 + 5 * row_height), "ROBOT:", ST7735.TFT.CYAN,    FONT, 1)
+    tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", ST7735.TFT.RED, FONT, 1)
     
 def draw_actions_screen(tft, screen_key, current_mac=None):
     """Draw robot actions screen with automatic alignment"""
-    tft.fill(robot_config.BLACK)
+    tft.fill(ST7735.TFT.BLACK)
     actions = robot_config.ROBOT_ACTIONS[screen_key]
     
     # Create dynamic title based on current robot
@@ -86,27 +84,27 @@ def draw_actions_screen(tft, screen_key, current_mac=None):
         left_desc = actions['left'][i]
         l_x, l_label = l_positions[i]
         desc_x = l_x - len(left_desc) * char_width - 2  # 2px gap
-        tft.text((desc_x, y), left_desc, robot_config.CYAN, robot_config.FONT, 1)
+        tft.text((desc_x, y), left_desc, ST7735.TFT.CYAN, FONT, 1)
         
         # L1-L4 labels (white)
-        tft.text((l_x, y), l_label, robot_config.WHITE, robot_config.FONT, 1)
+        tft.text((l_x, y), l_label, ST7735.TFT.WHITE, FONT, 1)
         
         # R1-R4 labels (white)
         r_x, r_label = r_positions[i]
-        tft.text((r_x, y), r_label, robot_config.WHITE, robot_config.FONT, 1)
+        tft.text((r_x, y), r_label, ST7735.TFT.WHITE, FONT, 1)
         
         # Right description (left-aligned to R1-R4)
         right_desc = actions['right'][i]
         desc_x = r_x + len(r_label) * char_width + 2  # 2px gap
-        tft.text((desc_x, y), right_desc, robot_config.YELLOW, robot_config.FONT, 1)
+        tft.text((desc_x, y), right_desc, ST7735.TFT.YELLOW, FONT, 1)
     
-    tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", robot_config.RED, robot_config.FONT, 1)
+    tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", ST7735.TFT.RED, FONT, 1)
     
 def draw_servo_list(tft, servo_trims, selected_servo_index=None, show_cursor=False):
     """Draw servo list with trim values"""
     
     # Draw vertical separator line
-    tft.vline((18, 36), 6 * 12, robot_config.GRAY)
+    tft.vline((18, 36), 6 * 12, ST7735.TFT.GRAY)
     
     # List of servos with their trim values
     for i in range(6):
@@ -117,35 +115,35 @@ def draw_servo_list(tft, servo_trims, selected_servo_index=None, show_cursor=Fal
         # Cursor (only in update mode)
         if show_cursor:
             if i == selected_servo_index:
-                tft.text((10, y), ">", robot_config.CYAN, robot_config.FONT, 1)
+                tft.text((10, y), ">", ST7735.TFT.CYAN, FONT, 1)
             else:
-                tft.text((10, y), " ", robot_config.BLACK, robot_config.FONT, 1)
+                tft.text((10, y), " ", ST7735.TFT.BLACK, FONT, 1)
         
         # Servo name
-        tft.text((25, y), servo_name, robot_config.WHITE, robot_config.FONT, 1)
+        tft.text((25, y), servo_name, ST7735.TFT.WHITE, FONT, 1)
         
         # Trim value
         trim_str = str(trim_value)
         if trim_value >= 0:
             trim_str = "+" + trim_str
-        tft.text((136, y), trim_str, robot_config.YELLOW, robot_config.FONT, 1)
+        tft.text((136, y), trim_str, ST7735.TFT.YELLOW, FONT, 1)
     
 def draw_trim_screen(tft):
     """Draw static trim screen interface (called once)"""
-    tft.fill(robot_config.BLACK)
+    tft.fill(ST7735.TFT.BLACK)
     draw_header(tft, "SERVO TRIM")
 
     # Draw vertical separator line
-    tft.vline((18, 36), 6 * 12, robot_config.GRAY)
+    tft.vline((18, 36), 6 * 12, ST7735.TFT.GRAY)
 
     # Draw servo names once at the beginning
     for i in range(6):
         y = 36 + i * 12
-        tft.text((25, y), robot_config.SERVO_NAMES[i], robot_config.WHITE, robot_config.FONT, 1)
+        tft.text((25, y), robot_config.SERVO_NAMES[i], ST7735.TFT.WHITE, FONT, 1)
     
     # Instructions at the bottom
-    tft.text((center_x("POT1: SELECT"), 110), "POT1: SELECT", robot_config.GREEN, robot_config.FONT, 1)
-    tft.text((center_x("BT8: SAVE   BT1: +1 BT2: -1"), 122), "BT8: SAVE   BT1: +1 BT2: -1", robot_config.GREEN, robot_config.FONT, 1)
+    tft.text((center_x("POT1: SELECT"), 110), "POT1: SELECT", ST7735.TFT.GREEN, FONT, 1)
+    tft.text((center_x("BT8: SAVE   BT1: +1 BT2: -1"), 122), "BT8: SAVE   BT1: +1 BT2: -1", ST7735.TFT.GREEN, FONT, 1)
     
 def update_joystick_display(tft, joy_data, prev_values):
     """Update joystick values display"""
@@ -158,15 +156,15 @@ def update_joystick_display(tft, joy_data, prev_values):
     
     for key, (value, x, y) in vals.items():
         if prev_values.get(key) != value:
-            tft.fillrect((x, y), (30, 8), robot_config.BLACK)
-            tft.text((x, y), pad(value), robot_config.YELLOW, robot_config.FONT, 1)
+            tft.fillrect((x, y), (30, 8), ST7735.TFT.BLACK)
+            tft.text((x, y), pad(value), ST7735.TFT.YELLOW, FONT, 1)
             prev_values[key] = value
     
 def update_potentiometer_display(tft, pot_value, prev_values):
     """Update potentiometer display"""
     if prev_values.get('pot') != pot_value:
-        tft.fillrect((36, 64), (30, 8), robot_config.BLACK)
-        tft.text((36, 64), pad(pot_value), robot_config.YELLOW, robot_config.FONT, 1)
+        tft.fillrect((36, 64), (30, 8), ST7735.TFT.BLACK)
+        tft.text((36, 64), pad(pot_value), ST7735.TFT.YELLOW, FONT, 1)
         prev_values['pot'] = pot_value
     
 def update_buttons_display(tft, btn_data, prev_values):
@@ -178,12 +176,12 @@ def update_buttons_display(tft, btn_data, prev_values):
     
     if bt_changed:
         x_bt = 10 + 20
-        tft.fillrect((x_bt, 76), (160 - x_bt, 8), robot_config.BLACK)
+        tft.fillrect((x_bt, 76), (160 - x_bt, 8), ST7735.TFT.BLACK)
         x = x_bt
         for i in range(8):
             pressed = bool(btn_data.get(f'bt{i+1}'))
-            color = robot_config.GREEN if pressed else robot_config.GRAY
-            tft.text((x, 76), str(i + 1), color, robot_config.FONT, 1)
+            color = ST7735.TFT.GREEN if pressed else ST7735.TFT.GRAY
+            tft.text((x, 76), str(i + 1), color, FONT, 1)
             prev_values[f'bt{i+1}'] = pressed
             x += 16
     
@@ -196,22 +194,22 @@ def update_switches_display(tft, btn_data, prev_values):
     
     if sw_changed:
         x_sw = 10 + 20
-        tft.fillrect((x_sw, 88), (160 - x_sw, 8), robot_config.BLACK)
+        tft.fillrect((x_sw, 88), (160 - x_sw, 8), ST7735.TFT.BLACK)
         x = x_sw
         for sw in ['sw1', 'sw2', 'sw3', 'sw4']:
             pressed = bool(btn_data.get(sw))
-            color = robot_config.GREEN if pressed else robot_config.GRAY
-            tft.text((x, 88), sw.upper(), color, robot_config.FONT, 1)
+            color = ST7735.TFT.GREEN if pressed else ST7735.TFT.GRAY
+            tft.text((x, 88), sw.upper(), color, FONT, 1)
             prev_values[sw] = pressed
             x += 34
     
 def update_mac_display(tft, mac_address, prev_mac):
     """Update robot name display"""
     if prev_mac != mac_address:
-        tft.fillrect((40, 100), (120, 8), robot_config.BLACK)
+        tft.fillrect((40, 100), (120, 8), ST7735.TFT.BLACK)
         robot_names, _ = robot_config.load_config()
         robot_name = robot_names.get(mac_address, "UNKNOWN")
-        tft.text((48, 100), robot_name, robot_config.YELLOW, robot_config.FONT, 1)
+        tft.text((48, 100), robot_name, ST7735.TFT.YELLOW, FONT, 1)
         return mac_address
     return prev_mac
     
@@ -224,10 +222,10 @@ def update_trim_display(tft, servo_trims, selected_servo_index, prev_values, for
         # Erase old cursor
         if prev_idx != -1:
             old_y = 36 + prev_idx * 12
-            tft.text((10, old_y), " ", robot_config.BLACK, robot_config.FONT, 1)
+            tft.text((10, old_y), " ", ST7735.TFT.BLACK, FONT, 1)
         # Draw new one
         new_y = 36 + selected_servo_index * 12
-        tft.text((10, new_y), ">", robot_config.CYAN, robot_config.FONT, 1)
+        tft.text((10, new_y), ">", ST7735.TFT.CYAN, FONT, 1)
         prev_values['last_servo_idx'] = selected_servo_index
 
     # 2. Handle values (loop through all, but fillrect only for changed ones)
@@ -238,13 +236,13 @@ def update_trim_display(tft, servo_trims, selected_servo_index, prev_values, for
         if prev_values.get(trim_key) != trim_value or force_refresh:
             y = 36 + i * 12
             # Clear only the number area (X adjusted to your layout)
-            tft.fillrect((136, y), (35, 8), robot_config.BLACK)
+            tft.fillrect((136, y), (35, 8), ST7735.TFT.BLACK)
             
             trim_str = f"{'+' if trim_value >= 0 else ''}{trim_value}"
-            tft.text((136, y), trim_str, robot_config.YELLOW, robot_config.FONT, 1)
+            tft.text((136, y), trim_str, ST7735.TFT.YELLOW, FONT, 1)
             prev_values[trim_key] = trim_value
     
 def show_cleanup_message(tft):
     """Show cleanup message before exit"""
-    tft.fill(robot_config.BLACK)
-    tft.text((20, 60), "RELEASE BUTTONS...", robot_config.WHITE, robot_config.FONT, 1)
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((20, 60), "RELEASE BUTTONS...", ST7735.TFT.WHITE, FONT, 1)

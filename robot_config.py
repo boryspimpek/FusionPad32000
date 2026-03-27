@@ -3,18 +3,6 @@ import ST7735 # type: ignore
 import ujson
 import os
 
-# === FONT CONFIGURATION ===
-FONT = {"Width": 5, "Height": 7, "Start": 32, "End": 122, "Data": None}  # Will be set from glcdfont
-
-# === COLORS ===
-BLACK  = ST7735.TFT.BLACK
-WHITE  = ST7735.TFT.WHITE
-CYAN   = 0x07FF
-YELLOW = 0xFFE0
-GREEN  = 0x07E0
-RED    = 0xF800
-GRAY   = 0x4208
-
 # === SCREEN MODES ===
 MODE_MAIN    = 0  # ekran z joystickami
 MODE_SCREEN2 = 1  # pierwszy ekran akcji
