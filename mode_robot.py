@@ -79,7 +79,7 @@ def run_robot_controller(tft):
             elif _state['current_screen'] == robot_config.MODE_SCREEN3:
                 robot_ui.draw_actions_screen(tft, 'screen3', robot_communication.get_current_mac())
             elif _state['current_screen'] == robot_config.MODE_TRIM:
-                robot_ui.draw_trim_screen(tft)
+                robot_ui.draw_trim_screen(tft, robot_communication.get_current_mac())
 
         # 5. UI UPDATE AND TRIM HANDLING
         if _state['current_screen'] == robot_config.MODE_MAIN:
@@ -150,7 +150,8 @@ def _update_trim_screen(tft, pot_data, btn_data):
         tft, 
         robot_input.get_servo_trims(), 
         _state['selected_servo'], 
-        _state['prev_values']
+        _state['prev_values'],
+        current_mac=robot_communication.get_current_mac()
     )
 
 def _cleanup(tft):

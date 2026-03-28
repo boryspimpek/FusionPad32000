@@ -1,13 +1,13 @@
 {
   "robots": {
     "5c013b6c1c48": {
-      "name": "OTTO NINJA",
+      "name": "OTTO xxx",
       "mac": "5c:01:3b:6c:1c:48",
       "robot_actions": {
         "screen2": {
           "title": "ACTIONS 1",
           "left": [
-            "Forward",
+            "Left",
             "Back",
             "Wave",
             "Tilt"
@@ -36,7 +36,7 @@
         }
       },
       "servo_names": [
-        "RF Right Foot:",
+        "CH1",
         "RL Right Leg:",
         "RA Right Arm:",
         "LF Left Foot:",

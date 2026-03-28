@@ -244,8 +244,27 @@ def update_mac_display(tft, mac_address, prev_mac):
         return mac_address
     return prev_mac
     
-def update_trim_display(tft, servo_trims, selected_servo_index, prev_values, force_refresh=False):
+def update_trim_display(tft, servo_trims, selected_servo_index, prev_values, force_refresh=False, current_mac=None):
     """Update only cursor and numeric values"""
+    
+    # Check if robot changed and update servo names if needed
+    if current_mac and prev_values.get('last_robot_mac') != current_mac:
+        config = robot_config.load_config()
+        servo_names = config['servo_names']
+        
+        # Get servo names for current robot or fallback to default
+        if current_mac in servo_names:
+            robot_servo_names = servo_names[current_mac]
+        else:
+            robot_servo_names = robot_config.SERVO_NAMES
+        
+        # Redraw servo names
+        for i in range(6):
+            y = 36 + i * 12
+            tft.fillrect((25, y), (110, 8), ST7735.TFT.BLACK)
+            tft.text((25, y), robot_servo_names[i], ST7735.TFT.WHITE, FONT, 1)
+        
+        prev_values['last_robot_mac'] = current_mac
     
     # 1. Handle cursor (draw only if changed)
     prev_idx = prev_values.get('last_servo_idx', -1)

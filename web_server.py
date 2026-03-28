@@ -107,7 +107,7 @@ def handle_request(client_socket):
             if 'application/json' in content_type:
                 # Direct JSON upload
                 print("Processing direct JSON upload")
-                success = save_json_file(body, "uploaded_config.json")
+                success = save_json_file(body, "robot_config.json")
                 if success:
                     send_success_response(client_socket, "JSON file saved successfully")
                     return
@@ -200,7 +200,7 @@ def parse_multipart_and_save(body, boundary):
                     content = content.split(f'--{boundary}')[0].strip()
                     
                     if content:
-                        return save_json_file(content, "uploaded_config.json")
+                        return save_json_file(content, "robot_config.json")
         
         return False
     except Exception as e:
