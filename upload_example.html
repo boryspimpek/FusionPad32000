@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSON Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .upload-area { 
+            border: 2px dashed #ccc; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0;
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer;
+            margin: 10px;
+        }
+        .result { 
+            margin: 20px 0; 
+            padding: 10px; 
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESP32 JSON Upload Test</h1>
+        <p>Test uploading JSON files to ESP32 in AP mode</p>
+        
+        <div class="upload-area">
+            <input type="file" id="fileInput" accept=".json">
+            <br><br>
+            <button onclick="uploadDirect()">Upload as JSON</button>
+            <button onclick="uploadMultipart()">Upload as Form</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const ESP32_IP = "192.168.4.1"; // Adjust if needed
+        
+        async function uploadDirect() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file first', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const text = await file.text();
+            
+            showResult('Uploading...', 'info');
+            
+            try {
+                console.log('Sending to:', `http://${ESP32_IP}/upload`);
+                console.log('Data length:', text.length);
+                
+                const response = await fetch(`http://${ESP32_IP}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: text
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.text();
+                console.log('Response text:', result);
+                
+                showResult(`Status: ${response.status} - ${result}`, 
+                          response.ok ? 'success' : 'error');
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function uploadMultipart() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a file first', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            showResult('Uploading...', 'info');
+            
+            try {
+                console.log('Sending multipart to:', `http://${ESP32_IP}/upload`);
+                console.log('File name:', fileInput.files[0].name);
+                
+                const response = await fetch(`http://${ESP32_IP}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.text();
+                console.log('Response text:', result);
+                
+                showResult(`Status: ${response.status} - ${result}`, 
+                          response.ok ? 'success' : 'error');
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+        
+        // Test connection on page load
+        window.onload = async function() {
+            try {
+                console.log('Testing connection to ESP32...');
+                const response = await fetch(`http://${ESP32_IP}/`);
+                console.log('Connection test OK:', response.status);
+                showResult('Connected to ESP32', 'success');
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                showResult('Cannot connect to ESP32. Check WiFi and IP address.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
