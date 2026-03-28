@@ -318,6 +318,59 @@
       transform: scale(0.97);
     }
 
+    .btn-upload {
+      background: var(--accent);
+      color: #000;
+    }
+    .btn-upload:hover {
+      background: #33eaff;
+      box-shadow: 0 0 16px rgba(0,229,255,0.4);
+    }
+    .btn-upload:active {
+      transform: scale(0.97);
+    }
+    .btn-upload:disabled {
+      background: var(--muted);
+      color: var(--text);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .esp-config {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--row-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+
+    .esp-config label {
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .esp-config input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      padding: 7px 10px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 200px;
+    }
+
+    .esp-config input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,229,255,0.08);
+    }
+
     /* Output */
     .output-panel {
       width: 100%;
@@ -417,11 +470,16 @@
 </header>
 
 <div class="panel">
+  <div class="esp-config">
+    <label for="esp-ip">ESP32 IP Address</label>
+    <input type="text" id="esp-ip" placeholder="192.168.4.1" value="192.168.4.1" />
+  </div>
   <div class="section-label">ROBOTS</div>
   <div id="robots-list"></div>
   <div class="actions-row">
     <button class="btn btn-add" onclick="addRobot()">+ ADD ROBOT</button>
     <button class="btn btn-generate" onclick="generate()">GENERATE JSON ▶</button>
+    <button class="btn btn-upload" id="upload-btn" onclick="uploadToESP()" disabled>UPLOAD TO ESP ↑</button>
   </div>
 </div>
 
@@ -622,6 +680,9 @@
     const panel = document.getElementById('output-panel');
     panel.classList.add('visible');
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Enable upload button
+    document.getElementById('upload-btn').disabled = false;
   }
 
   function downloadJSON() {
@@ -639,6 +700,56 @@
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  async function uploadToESP() {
+    const jsonText = document.getElementById('json-output').textContent;
+    
+    if (!jsonText) {
+      showToast('⚠ Generate JSON configuration first');
+      return;
+    }
+
+    const espIP = document.getElementById('esp-ip').value.trim();
+    if (!espIP) {
+      showToast('⚠ Enter ESP32 IP address');
+      return;
+    }
+
+    const uploadBtn = document.getElementById('upload-btn');
+    const originalText = uploadBtn.textContent;
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'UPLOADING...';
+    
+    try {
+      showToast(' Uploading configuration...');
+      
+      // Upload JSON directly (same as upload_example.html uploadDirect function)
+      const response = await fetch(`http://${espIP}/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonText
+      });
+      
+      console.log('Response status:', response.status);
+      const result = await response.text();
+      console.log('Response text:', result);
+      
+      if (response.ok) {
+        showToast('✅ Configuration uploaded successfully!');
+      } else {
+        throw new Error(`Upload failed: ${response.status} - ${result}`);
+      }
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      showToast(`❌ ${error.message}`);
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = originalText;
+    }
   }
 
   // Load initial data
