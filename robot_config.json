@@ -2,11 +2,91 @@
   "robots": {
     "5c013b6c1c48": {
       "name": "OTTO NINJA",
-      "mac": "5c:01:3b:6c:1c:48"
+      "mac": "5c:01:3b:6c:1c:48",
+      "robot_actions": {
+        "screen2": {
+          "title": "ACTIONS 1",
+          "left": [
+            "Forward",
+            "Back",
+            "Wave",
+            "Tilt"
+          ],
+          "right": [
+            "Forward",
+            "Back",
+            "Arms",
+            "Steps"
+          ]
+        },
+        "screen3": {
+          "title": "ACTIONS 2",
+          "left": [
+            "Circles",
+            "Steps",
+            "Steps",
+            "Toes"
+          ],
+          "right": [
+            "Spin",
+            "Boogie",
+            "Balerina",
+            "Weird"
+          ]
+        }
+      },
+      "servo_names": [
+        "RF Right Foot:",
+        "RL Right Leg:",
+        "RA Right Arm:",
+        "LF Left Foot:",
+        "LL Left Leg:",
+        "LA Left Arm:"
+      ]
     },
     "9888e0d1823c": {
-      "name": "FALLOUT OTTO", 
-      "mac": "98:88:e0:d1:82:3c"
+      "name": "FALLOUT OTTO",
+      "mac": "98:88:e0:d1:82:3c",
+      "robot_actions": {
+        "screen2": {
+          "title": "ACTIONS 1",
+          "left": [
+            "Forward",
+            "Back",
+            "Wave",
+            "Tilt"
+          ],
+          "right": [
+            "Forward",
+            "Back",
+            "Arms",
+            "Steps"
+          ]
+        },
+        "screen3": {
+          "title": "ACTIONS 2",
+          "left": [
+            "Circles",
+            "Steps",
+            "Steps",
+            "Toes"
+          ],
+          "right": [
+            "Spin",
+            "Boogie",
+            "Balerina",
+            "Weird"
+          ]
+        }
+      },
+      "servo_names": [
+        "RF Right Foot:",
+        "RL Right Leg:",
+        "RA Right Arm:",
+        "LF Left Foot:",
+        "LL Left Leg:",
+        "LA Left Arm:"
+      ]
     }
   }
 }

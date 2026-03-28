@@ -22,7 +22,9 @@ def initialize_network():
     """Initialize WiFi network and ESP-NOW"""
     global _sta, _esp, _receiver_macs
     # Load configuration to get MAC addresses
-    robot_names, robot_macs = robot_config.load_config()
+    config = robot_config.load_config()
+    robot_names = config['robot_names']
+    robot_macs = config['robot_macs']
     _receiver_macs = robot_macs
     
     _sta = network.WLAN(network.STA_IF)

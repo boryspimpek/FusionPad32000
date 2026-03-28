@@ -44,11 +44,21 @@ def draw_main_screen(tft):
 def draw_actions_screen(tft, screen_key, current_mac=None):
     """Draw robot actions screen with automatic alignment"""
     tft.fill(ST7735.TFT.BLACK)
-    actions = robot_config.ROBOT_ACTIONS[screen_key]
+    
+    # Load configuration to get robot-specific actions
+    config = robot_config.load_config()
+    robot_actions = config['robot_actions']
+    
+    # Get actions for current robot or fallback to default
+    if current_mac and current_mac in robot_actions:
+        actions = robot_actions[current_mac][screen_key]
+    else:
+        # Fallback to hardcoded actions
+        actions = robot_config.ROBOT_ACTIONS[screen_key]
     
     # Create dynamic title based on current robot
     if current_mac:
-        robot_names, _ = robot_config.load_config()
+        robot_names = config['robot_names']
         robot_name = robot_names.get(current_mac, "UNKNOWN ROBOT")
         # Extract action number from original title (e.g., ACTIONS 1" -> "1")
         action_number = actions['title'].split()[-1]
@@ -100,16 +110,26 @@ def draw_actions_screen(tft, screen_key, current_mac=None):
     
     tft.text((center_x("HOLD SW1 + SW2 = EXIT"), 118), "HOLD SW1 + SW2 = EXIT", ST7735.TFT.RED, FONT, 1)
     
-def draw_servo_list(tft, servo_trims, selected_servo_index=None, show_cursor=False):
+def draw_servo_list(tft, servo_trims, selected_servo_index=None, show_cursor=False, current_mac=None):
     """Draw servo list with trim values"""
     
     # Draw vertical separator line
     tft.vline((18, 36), 6 * 12, ST7735.TFT.GRAY)
     
     # List of servos with their trim values
+    config = robot_config.load_config()
+    servo_names = config['servo_names']
+    
+    # Get servo names for current robot or fallback to default
+    if current_mac and current_mac in servo_names:
+        robot_servo_names = servo_names[current_mac]
+    else:
+        # Fallback to hardcoded servo names
+        robot_servo_names = robot_config.SERVO_NAMES
+    
     for i in range(6):
         y = 36 + i * 12
-        servo_name = robot_config.SERVO_NAMES[i]
+        servo_name = robot_servo_names[i]
         trim_value = servo_trims[i]
         
         # Cursor (only in update mode)
@@ -128,7 +148,7 @@ def draw_servo_list(tft, servo_trims, selected_servo_index=None, show_cursor=Fal
             trim_str = "+" + trim_str
         tft.text((136, y), trim_str, ST7735.TFT.YELLOW, FONT, 1)
     
-def draw_trim_screen(tft):
+def draw_trim_screen(tft, current_mac=None):
     """Draw static trim screen interface (called once)"""
     tft.fill(ST7735.TFT.BLACK)
     draw_header(tft, "SERVO TRIM")
@@ -137,9 +157,19 @@ def draw_trim_screen(tft):
     tft.vline((18, 36), 6 * 12, ST7735.TFT.GRAY)
 
     # Draw servo names once at the beginning
+    config = robot_config.load_config()
+    servo_names = config['servo_names']
+    
+    # Get servo names for current robot or fallback to default
+    if current_mac and current_mac in servo_names:
+        robot_servo_names = servo_names[current_mac]
+    else:
+        # Fallback to hardcoded servo names
+        robot_servo_names = robot_config.SERVO_NAMES
+    
     for i in range(6):
         y = 36 + i * 12
-        tft.text((25, y), robot_config.SERVO_NAMES[i], ST7735.TFT.WHITE, FONT, 1)
+        tft.text((25, y), robot_servo_names[i], ST7735.TFT.WHITE, FONT, 1)
     
     # Instructions at the bottom
     tft.text((center_x("POT1: SELECT"), 110), "POT1: SELECT", ST7735.TFT.GREEN, FONT, 1)
@@ -207,7 +237,8 @@ def update_mac_display(tft, mac_address, prev_mac):
     """Update robot name display"""
     if prev_mac != mac_address:
         tft.fillrect((40, 100), (120, 8), ST7735.TFT.BLACK)
-        robot_names, _ = robot_config.load_config()
+        config = robot_config.load_config()
+        robot_names = config['robot_names']
         robot_name = robot_names.get(mac_address, "UNKNOWN")
         tft.text((48, 100), robot_name, ST7735.TFT.YELLOW, FONT, 1)
         return mac_address
